@@ -2,14 +2,45 @@ const { decryptMedia } = require('@open-wa/wa-automate');
 var admin = require('firebase-admin');
 const moment = require('moment');
 const set = require('../settings');
+const fs = require('fs-extra')
+const axios = require("axios").default;
 
 // Library
 const _function = require('../lib/function');
 const _txt = require('../lib/text');
 const color = require('../util/colors');
-const tugas = [];
+const tugas = JSON.parse(fs.readFileSync('./jsonfolder/tugas.json'));
 const judullist = [];
 const daftarlist = [];
+
+function arrayRemove(arr, value) { 
+    
+  return arr.filter(function(ele){ 
+      return ele != value; 
+  });
+}
+
+function ngelistisi(){
+  let list = '';
+  list += `${judullist[0]}\n`;
+  daftarlist.forEach(function (item, index){
+    index = index+1;
+    list += `${index}. ${item}\n`
+    //client.sendText(from, (index+1) + ". " + item);
+  });
+  return list;
+}
+
+function ngelisttugas(){
+  let list = '';
+  list += "Daftar tugas : \n"
+  tugas.forEach(function (item, index){
+    index = index+1;
+    list += `${index}. ${item}\n`
+    //client.sendText(from, (index+1) + ". " + item);
+  });
+  return list;
+}
 
 //Folder Sistem
 //const setting = JSON.parse(fs.readFileSync('./settings/setting.json'))
@@ -202,7 +233,7 @@ module.exports = async (client, message) => {
       case 'add':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (arguments.length !== 1) client.reply(from, '_⚠️ Contoh Penggunaan perintah : !add 62812....._', id);
+        if (arguments.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}add 62812....._`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isNumberValid = await client.checkNumberStatus(arguments[0] + '@c.us');
         if (isNumberValid.status === 200)
@@ -215,7 +246,7 @@ module.exports = async (client, message) => {
       case 'kick':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (mentionedJidList.length !== 1) client.reply(from, '_⚠️ Contoh Penggunaan perintah : !kick @mention_', id);
+        if (mentionedJidList.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}kick @mention_`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isKicked = await client.removeParticipant(from, mentionedJidList[0]);
         if (isKicked) return await client.reply(from, '_🎉 Berhasil Kick member Berikan Ucapan Selamat Tinggal!_', id);
@@ -224,7 +255,7 @@ module.exports = async (client, message) => {
       case 'promote':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (mentionedJidList.length !== 1) client.reply(from, '_⚠️ Contoh Penggunaan perintah : !promote @mention_', id);
+        if (mentionedJidList.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}promote @mention_`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isPromoted = await client.promoteParticipant(from, mentionedJidList[0]);
         if (isPromoted) return await client.reply(from, '_🎉 Berhasil promote member menjadi Admin/Pengurus Grup! Berikan Ucapan Selamat_', id);
@@ -233,7 +264,7 @@ module.exports = async (client, message) => {
       case 'demote':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (mentionedJidList.length !== 1) client.reply(from, '_⚠️ Contoh Penggunaan perintah : !demote @mention_', id);
+        if (mentionedJidList.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}demote @mention_`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isDemoted = await client.demoteParticipant(from, mentionedJidList[0]);
         if (isDemoted) return await client.reply(from, '_🎉 Berhasil demote Admin menjadi Member! Ucapkan Kasihan!_', id);
@@ -293,7 +324,7 @@ module.exports = async (client, message) => {
       case 'silent':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (arguments.length !== 1) return await client.reply(from, '_⚠️ Contoh penggunaan Perintah : !silent on|off_', id);
+        if (arguments.length !== 1) return await client.reply(from, `_⚠️ Contoh penggunaan Perintah : ${botPrefix}silent on|off_`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isSilent = await client.setGroupToAdminsOnly(from, arguments[0].toLowerCase() === 'on');
         if (isSilent) return await client.reply(from, `_🎉 Berhasil set grup ke-*${arguments[0].toLowerCase() === 'on' ? 'Admin Mode' : 'Everyone Mode'}*_`, id);
@@ -388,7 +419,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'voice':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah: !voice <kode> <kalimat>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah: ${botPrefix}voice <kode> <kalimat>_`, id);
         const voiceUrl = _function.voiceUrl(arguments);
         await client.sendPtt(from, voiceUrl, id);
         break;
@@ -423,27 +454,39 @@ module.exports = async (client, message) => {
 
       case 'quran':
       case 'quranayat':
-        if (arguments.length != 2) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !quranayat <surah> <ayat>_', id);
-        const ayah = await _function.quran.ayat(arguments);
-        await client.reply(from, ayah, id);
+        try {
+          if (arguments.length != 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}quranayat <surah> <ayat>_`, id);
+          const ayah = await _function.quran.ayat(arguments);
+          await client.reply(from, ayah, id);
+        } catch (error) {
+          await client.reply(from, `Ayat Surat Al-Quran tidak ditemukan!`);
+        }
         break;
 
       case 'quransurah':
-        if (arguments.length != 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !quransurah <surah>_');
-        const surah = await _function.quran.surah(arguments);
-        await client.reply(from, surah, id);
+        try {
+          if (arguments.length != 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}quransurah <surah>_`);
+          const surah = await _function.quran.surah(arguments);
+          await client.reply(from, surah, id);
+        } catch (error) {
+          await client.reply(from, `Ayat Surat Al-Quran tidak ditemukan!`);
+        }
         break;
 
       case 'murotal':
       case 'murrotal':
       case 'murottal':
-        if (arguments.length != 2) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !quranayat <surah> <ayat>_', id);
+        try {
+        if (arguments.length != 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}murrotal <surah> <ayat>_`, id);
         const murottalAudio = await _function.quran.murottal(arguments);
         await client.sendPtt(from, murottalAudio, id);
+        } catch (error) {
+          await client.reply(from, `Ayat Surat Al-Quran tidak ditemukan!`);
+        }
         break;
 
       case 'tafsir':
-        if (arguments.length != 2) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !quranayat <surah> <ayat>_', id);
+        if (arguments.length != 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}tafsir <ayat> <surat>_`, id);
         const tafsir = await _function.quran.tafsir(arguments);
         await client.reply(from, tafsir, id);
         break;
@@ -452,32 +495,32 @@ module.exports = async (client, message) => {
         break;
 
       case 'makequote':
-        if (arguments.join(' ').split('@').length < 2) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !makequote <nama>@<kalimat>_', id);
+        if (arguments.join(' ').split('@').length < 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}makequote <nama>@<kalimat>_`, id);
         const getMakequote = _function.makequote(arguments);
         await client.sendImage(from, getMakequote, sender.id, '', id);
         break;
 
       case 'mirip':
-        if (mentionedJidList.length > 0 || arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah: !mirip <nama>_', id);
+        if (mentionedJidList.length > 0 || arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah: ${botPrefix}mirip <nama>_`, id);
         const listNama = ['Udin', 'Uzumaki Bayu', 'Saburo', 'Saruto', 'Yang Lek', 'Uchiha Roy', 'DPR yang korupsi, gendut gendut gak berotak', 'Monyet', 'Maling kandang', 'Maling Dalaman'];
         await client.reply(from, `_👦🏼 *${arguments.join(' ')}* Mirip dengan ${listNama[Math.floor(Math.random() * listNama.length)]}_`, id);
         break;
 
       case 'gay':
-        if (mentionedJidList.length > 0 || arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah: !gay <nama>_', id);
+        if (mentionedJidList.length > 0 || arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah: ${botPrefix}gay <nama>_`, id);
         const gayPercentage = Math.floor(Math.random() * 100);
         await client.reply(from, `_👬🏻 Tingkat gay *${arguments.join(' ')}* sebesar ${gayPercentage}%_`, id);
         break;
 
       case 'brainly':
-        if (arguments.length < 1) return client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !brainly <pertanyaan>_', id);
+        if (arguments.length < 1) return client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}brainly <pertanyaan>_`, id);
         const getBrainly = await _function.brainly(arguments.join(' '));
         await client.reply(from, getBrainly, id);
         break;
 
       case 'sticker':
       case 'stiker':
-        if (!mimetype) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar yang ingin dijadikan stiker lalu berikan caption !stiker_', id);
+        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar yang ingin dijadikan stiker lalu berikan caption ${botPrefix}stiker_`, id);
         if (!mimetype.includes('image')) return await client.reply(from, '_⚠️ Pastikan kamu benar mengirim image (gambar)_', id);
         const imagemediadata = await decryptMedia(message);
         const imageb64 = `data:${mimetype};base64,${imagemediadata.toString('base64')}`;
@@ -486,7 +529,7 @@ module.exports = async (client, message) => {
 
       case 'gifsticker':
       case 'gifstiker':
-        if (!mimetype) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : kirim sebuah video pendek yang ingin dijadikan stiker lalu berikan caption !gifstiker_', id);
+        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah video pendek yang ingin dijadikan stiker lalu berikan caption ${botPrefix}gifstiker_`, id);
         if (!mimetype.includes('mp4')) return await client.reply(from, '_⚠️ Pastikan yang anda kirim adalah file video ber-ekstensi mp4_', id);
         const vidmediadata = await decryptMedia(message);
         const vidb64 = `data:${mimetype};base64,${vidmediadata.toString('base64')}`;
@@ -495,7 +538,7 @@ module.exports = async (client, message) => {
 
       case 'giphysticker':
       case 'giphystiker':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !giphystiker <giphy url/link>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}giphystiker <giphy url/link>_`, id);
         if (!arguments[0].match(urlRegex)) return await client.reply(from, '_⚠️ Pastikan yang kamu kirimkan adalah url yang benar_', id);
         await client.sendGiphyAsSticker(from, arguments[0]);
         break;
@@ -507,7 +550,7 @@ module.exports = async (client, message) => {
 
       case 'jodoh':
         const jodohSplit = arguments.join(' ').split('&');
-        if (jodohSplit.length < 2) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah: !jodoh <nama kamu>&<nama seseorang>_');
+        if (jodohSplit.length < 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah: ${botPrefix}jodoh <nama kamu>&<nama seseorang>_`);
         const jodohPersentase = Math.floor(Math.random() * 100);
         await client.reply(from, `_💖 Persentase kecocokan ${jodohSplit[0]} & ${jodohSplit[1]} sebesar ${jodohPersentase}_`, id);
         break;
@@ -565,14 +608,14 @@ module.exports = async (client, message) => {
 
       case 'lyrics':
       case 'lirik':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !lirik <judul lagu>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}lirik <judul lagu>_`, id);
         const getLyrics = await _function.lirik(arguments.join(' '));
         if (!getLyrics) return await client.reply(from, `_🥺 Lirik *${arguments.join(' ')}* Tidak Ditemukan!_`, id);
         await client.reply(from, getLyrics, id);
         break;
 
       case 'short':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !short <url/link yang ingin di perkecil>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}short <url/link yang ingin di perkecil>_`, id);
         const getShortener = await _function.short(arguments[0]);
         await client.reply(from, `_${getShortener}_`, id);
         break;
@@ -599,7 +642,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'anime':
-        if (arguments.length < 1) return await client.reply(from, '_Penggunaan : !anime <judul>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_Penggunaan : ${botPrefix}anime <judul>_`, id);
         const getAnime = await _function.anime(arguments.join(' '));
         await client.sendImage(from, getAnime.picUrl, `${t}_${sender.id}.jpg`, getAnime.caption, id);
         break;
@@ -610,14 +653,14 @@ module.exports = async (client, message) => {
 
       case 'stickertottext':
       case 'stikerteks':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !stikerteks <kalimat>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}stikerteks <kalimat>_`, id);
         const teksLink = _function.tosticker(arguments);
         await client.sendStickerfromUrl(from, teksLink);
         break;
 
       case 'wikipedia':
       case 'wiki':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !wiki <keywords>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}wiki <keywords>_`, id);
         const getWiki = await _function.wiki(arguments.join(' '));
         if (!getWiki) return await client.reply(from, `_⚠️ *${arguments.join(' ')}* pada Wikipedia tidak ditemukan_`, id);
         await client.sendImage(from, getWiki.picUrl, `${t}_${sender.id}.jpg`, getWiki.caption, id);
@@ -629,7 +672,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'join':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !join <grup link>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}join <grup link>_`, id);
         const joinStatus = await client.joinGroupViaLink(arguments[0]);
         if (joinStatus === 406) return await client.reply(from, '_⚠️ Pastikan yang kamu masukkan adalah URL grup yang benar!_', id);
         if (joinStatus === 401) return await client.reply(from, '_⚠️ Bot Tidak dapat Join, karena baru-baru ini bot baru saja di kick dari grup tersebut!_', id);
@@ -643,13 +686,13 @@ module.exports = async (client, message) => {
 
       case 'weather':
       case 'cuaca':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !cuaca <nama kota>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}cuaca <nama kota>_`, id);
         const getWeather = await _function.weather(arguments.join(' '));
         await client.reply(from, getWeather, id);
         break;
 
       case 'movie':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !movie <judul>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}movie <judul>_`, id);
         const getMovie = await _function.movie(arguments.join(' '));
         if (!getMovie) return await client.reply(from, `_⚠️ ${arguments.join(' ')} Tidak ditemukan!_`, id);
         await client.sendImage(from, getMovie.moviePicture, `${t}_${sender.id}.jpeg`, getMovie.movieCaption, id);
@@ -707,10 +750,12 @@ module.exports = async (client, message) => {
 
         await client.sendTextWithMentions(from, ml);
         break;
-
+        
       case 'addtugas':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !addtugas <detail tugas>_', id);
-        const tugasin = tugas.push(arguments);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}addtugas | <detail tugas>_`, id);
+        const isitugas = arg.split('|')[1];
+        const tugasin = tugas.push(isitugas);
+        fs.writeFileSync('./jsonfolder/tugas.json', JSON.stringify(tugas));
         if (tugasin) return await client.reply(from, '📚 Tugas sudah ditambahkan!', id)
         break;
       
@@ -718,18 +763,19 @@ module.exports = async (client, message) => {
         if (!tugas.length || tugas.length == 0){
           await client.reply(from, "Gaada tugas ntap", id);
         } else {
-          await client.reply(from, "Daftar tugas : ", id);
-          tugas.forEach(function (item, index){
-              client.sendText(from, (index+1) + ". " + item);
-          });
+          const listtugas = ngelisttugas()
+          await client.reply(from, listtugas, id);
         }
         break;
       
       case 'hapustugas':
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !hapustugas <nomor tugas>_', id);
-        var i = arguments--;
-        const hapusin = delete tugas[i];
-        if (hapusin) return await cl.reply(from, "Tugas dengan nomor " + arguments + " sudah dihapus", id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix} <nomor tugas>_`, id);
+        var i = arguments[0];
+        i--;
+        const hapusintugaslist = tugas.splice(i, 1);
+        fs.writeFileSync('./jsonfolder/tugas.json', JSON.stringify(tugas));
+        //const hapusin = delete tugas[i];
+        if (hapusintugaslist) return await client.reply(from, "Tugas dengan nomor " + arguments + " sudah dihapus", id);
         break;
 
       //Stiker commands
@@ -838,13 +884,57 @@ module.exports = async (client, message) => {
           break
 
         case 'addjudullist':
-          if (arguments.length === 0) return client.reply(from, `Buat list dengan judul\n\nContoh : ${botPrefix}addlist <judul list>`);
-          if (judullist.length > 1) return client.reply(from, `Mohon untuk reset list terlebih dahulu dengan command ${botPrefix}resetlist`);
-          const judulin = judullist.push(arguments);
-          if (judulin) return client.reply(from, `List sudah ditambahkan, untuk menambahkan isi list menggunakan command ${botPrefix}addlist`);
+          if (arguments.length === 0) return client.reply(from, `Buat list dengan judul\n\nContoh : ${botPrefix}addjudullist | <judul list>`, id);
+          if (judullist.length > 0) return client.reply(from, `Mohon untuk reset list terlebih dahulu dengan command ${botPrefix}resetlist`, id);
+          const isijudullist = arg.split(`|`)[1];
+          const judulin = judullist.push(isijudullist);
+          if (judulin) return client.reply(from, `List sudah ditambahkan, untuk menambahkan isi list menggunakan command ${botPrefix}addlist | <isi list>`, id);
+          break;
+        
+        case 'addlist':
+          if (arguments.length === 0) return client.reply(from, `Tambah daftar List dengan isi\n\nContoh : ${botPrefix}addlist | <ini list>`, id);
+          if (judullist.length === 0) return client.reply(from, `Mohon untuk membuat judul List terlebih dahulu dengan command ${botPrefix}addjudullist`, id);
+          const isilist = arg.split(`|`)[1];
+          const isiin = daftarlist.push(isilist);
+          if (isiin) {
+            const isidaftar = ngelistisi();
+            client.reply(from, isidaftar, id);
+          }
+          break;
+        
+        case 'hapuslist':
+          if (arguments.length === 0) return client.reply(from, `Hapus item pada List dengan nomor item\n\nContoh : ${botPrefix}hapuslist 1`, id);
+          if (daftarlist.length === 0) return client.reply(from, `Tambah daftar List dengan isi\n\nContoh : ${botPrefix}addlist | <ini list>`, id);
+          if (judullist.length === 0) return client.reply(from, `Mohon untuk membuat judul List terlebih dahulu dengan command ${botPrefix}addjudullist`, id);
+          var i = arguments[0];
+          i--;
+          const hapusinlist = daftarlist.splice(i, 1);
+          if (hapusinlist){
+            client.reply(from, `Item dengan nomor ${arguments} telah dihapus !`);
+            const isidaftar = ngelistisi();
+            client.sendText(from, isidaftar);
+          }
+          break;
+
+        case 'outputlist':
+          if (daftarlist.length === 0) return client.reply(from, `Tambah daftar List dengan isi\n\nContoh : ${botPrefix}addlist | <ini list>`, id);
+          if (judullist.length === 0) return client.reply(from, `Mohon untuk membuat judul List terlebih dahulu dengan command ${botPrefix}addjudullist`, id);
+          const isidaftar = ngelistisi();
+          client.reply(from, isidaftar, id);
+          break;
+
+        case 'resetlist':
+          while (daftarlist.length) { 
+            daftarlist.pop(); 
+          }
+          while (judullist.length) { 
+            judullist.pop(); 
+          }
+          if (daftarlist.length === 0 && judullist.length === 0) return client.reply(from, `List sudah di reset !`, id);
           break;
 
       default:
+        client.reply(from, `Salah command, mohon cek ${botPrefix} untuk daftar command`, id)
         return console.debug(color('red', '➜'), color('yellow', isGroup ? '[GROUP]' : '[PERSONAL]'), `!${command} | ${sender.id} ${isGroup ? 'FROM ' + formattedTitle : ''}`, color('yellow', moment().format()));
     }
 
