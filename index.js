@@ -12,6 +12,7 @@ const configObject = {
   qrTimeout: 0,
 };
 
+
 const ops = process.platform;
 if (ops === "win32" || ops === "win64") configObject["executeablePath"] = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe";
 else if (ops === "linux") configObject["executeablePath"] = "/usr/bin/google-chrome-stable";
@@ -31,7 +32,7 @@ const startBot = async () => {
       Handler.messageHandler(Client, message);
     });
 
-    await Client.onGlobalParicipantsChanged((event) => {
+    await Client.onGlobalParticipantsChanged((event) => {
       Handler.globalParticipantsChanged(Client, event);
     });
 
@@ -41,11 +42,11 @@ const startBot = async () => {
 
     await Client.onIncomingCall(async (call) => {
       const { peerJid } = call;
-      await Client.contactBlock(peerJid);
-      await Client.sendText(peerJid, "_⚠️ Bot lagi sibuk, jangan Telpon! DM ke- *@rzkytmgrr* untuk Unblock!_");
+      //await Client.contactBlock(peerJid);
+      await Client.sendText(peerJid, "_⚠️ Bot lagi sibuk, jangan Telpon oey!_");
     });
-  } catch (error) {
-    console.log("Error When start bot " + error);
+  } catch (err) {
+    console.log(err.stack)
   }
 };
 

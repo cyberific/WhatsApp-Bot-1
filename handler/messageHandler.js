@@ -1,4 +1,5 @@
 const { decryptMedia } = require('@open-wa/wa-automate');
+var admin = require('firebase-admin');
 const moment = require('moment');
 const set = require('../settings');
 
@@ -6,6 +7,7 @@ const set = require('../settings');
 const _function = require('../lib/function');
 const _txt = require('../lib/text');
 const color = require('../util/colors');
+const tugas = [];
 
 module.exports = async (client, message) => {
   try {
@@ -48,12 +50,14 @@ module.exports = async (client, message) => {
      * lakukan donasi melalui link ini https://bit.ly/34IDvrD
      */
 
+    /*
     if (isGroup) {
       if (groupMetadata.participants.length < 10 && !botOwner.includes(groupMetadata.owner)) {
-        await client.reply(from, `_⚠️ Ooops... maaf untuk menghidari grup SPAM, bot hanya dapat di gunakan di grup yang mempunyai member lebih dari 10, sedangkan member grup kamu hanya ada *${groupMetadata.participants.length}*_\n\n_Untuk informasi lebih lanjut silahkan tanyakan saya di instagram *@rzkytmgrr*_`, id);
+        await client.reply(from, `_⚠️ Ooops... maaf untuk menghidari grup SPAM, bot hanya dapat di gunakan di grup yang mempunyai member lebih dari 10, sedangkan member grup kamu hanya ada *${groupMetadata.participants.length}*_\n\n_Untuk informasi lebih lanjut silahkan tanyakan saya di instagram *https://wa.me/6288225610884*_`, id);
         return client.leaveGroup(from);
       }
     }
+    */
 
     const allChats = await client.getAllChats();
     switch (command) {
@@ -93,7 +97,7 @@ module.exports = async (client, message) => {
       case 'owner':
       case 'contact':
       case 'ownerbot':
-        return await client.reply(from, '_👋 Hai, Mari berkomunikasi dengan owner, Instagram : *@rzkytmgrr*_', id);
+        return await client.reply(from, '_👋 Hai, kalo mau req fitur bisa pc ke *https://wa.me/6288225610884*_', id);
         break;
 
       case 'clearall':
@@ -173,7 +177,7 @@ module.exports = async (client, message) => {
           await client
             .addParticipant(from, isNumberValid.id._serialized)
             .then(async () => await client.reply(from, '_🎉 Berhasil menambahkan Member, Berikan ucapan Selamat datang!_', id))
-            .catch(async (error) => await client.reply(from, '_🥺 Gagal menambahkan member! kemungkinan member sudah diblock oleh Bot! untuk unblockir silahkan DM ke *@rzkytmgrr*_', id));
+            .catch(async (error) => await client.reply(from, '_🥺 Gagal menambahkan member! kemungkinan member sudah diblock oleh Bot! untuk unblockir silahkan DM ke *https://wa.me/6288225610884*_', id));
         break;
 
       case 'kick':
@@ -234,12 +238,15 @@ module.exports = async (client, message) => {
 
       case 'disconnect':
       case 'kickbot':
+      case 'leave':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        client
+        client.reply (from, 'Gamao, gw gamao leave', id);
+          /*
           .reply(from, '_👋 Terimakasih, atas kenangan selama ini yang kita lalui, kalau kamu rindu gpp masukin aku lagi ke grup kamu! aku akan selalu ada buat kamu!_', id)
           .then(async () => await client.leaveGroup(from))
           .catch((error) => console.log('kickbot error'));
+          */
         break;
 
       case 'notif':
@@ -262,9 +269,13 @@ module.exports = async (client, message) => {
 
       case 'p':
       case 'ping':
+      case 'spam':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         const allMembers = groupMetadata.participants.map((member) => `@${member.id.split('@')[0]}`);
-        await client.sendTextWithMentions(from, `_😏 Summon no jutsu!_\n\n${allMembers.join('\n')}\n\n_🧒🏻 Follow instagram Developer *@rzkytmgrr*, untuk mendapatkan informasi lebih tentang Bot!_`);
+        if ( groupMetadata.desc && groupMetadata.desc.includes("#noping") ) 
+        { await client.sendText(from, '_*⚠️ Gaboleh spam disini yak*_') } 
+        else {
+          await client.sendTextWithMentions(from, `_ Summon _\n\n${allMembers.join('\n')}\n`); }
         break;
 
       case 'votekick':
@@ -487,11 +498,15 @@ module.exports = async (client, message) => {
 
       case 'musik':
       case 'music':
+        await client.reply(from, "Mon maap, fitur sementara dimatikan karena menyebabkan ketidakstabilan server 🙏", id);
+        break;
+        /*
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
         const musicLink = await _function.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
         await client.sendPtt(from, musicLink, id);
         break;
+        */
 
       case 'downtiktok':
         return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan!_', id);
@@ -599,6 +614,121 @@ module.exports = async (client, message) => {
         const getMovie = await _function.movie(arguments.join(' '));
         if (!getMovie) return await client.reply(from, `_⚠️ ${arguments.join(' ')} Tidak ditemukan!_`, id);
         await client.sendImage(from, getMovie.moviePicture, `${t}_${sender.id}.jpeg`, getMovie.movieCaption, id);
+        break;
+
+      case 'run':
+        const { chatId, body } = message;
+        try {
+          let msg = body.replace("#run ", "").split("\n");
+          const lang = msg.splice(0, 1)[0];
+          const source = msg.join("\n");
+          const response = await axios.post(
+            "https://emkc.org/api/v1/piston/execute",
+            {
+              language: lang,
+              source: source,
+            }
+          );
+          const { ran, language, output, version, code, message } = response.data;
+          const reply = `${
+            ran ? "Ran" : "Error running"
+          } with ${language} v${version}\nOutput:\n${output}`;
+          client.sendText(from, reply);
+        } catch (e) {
+          console.log(e);
+          client.sendText(from, "Unsupported language");
+        }
+        break;
+
+      case 'run languages':
+        const response = await axios.get(
+          "https://emkc.org/api/v1/piston/versions"
+        );
+        const reply = response.data
+          .map((item) => `${item.name} - v${item.version}`)
+          .join("\n");
+        client.sendText(from, reply);
+        break;
+
+      case 'loginvr':
+        const vr = "Login vr dong \n yasman @6281285600258 \n hadid @6281329989383 \n junas @628978113198 \n barra @6281388088047 \n titan @6287788087760 \n sean @6283818448972 \n ari @6281299115053 \n dito @6285155277438";
+        await client.sendTextWithMentions(from, vr);
+        break;
+
+      case 'loginml':
+        const ml = ` Login ml dong
+        aji @628888418207
+        wahyu @6281413543830
+        yasman @6281285600258
+        junas	@628978113198
+        ikhsan @6281510026269
+        sese @6281511529199
+        dito @6285155277438
+        jidni @62895330810346`;
+
+        await client.sendTextWithMentions(from, ml);
+        break;
+
+      case 'addtugas':
+        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !addtugas <detail tugas>_', id);
+        const tugasin = tugas.push(arguments);
+        if (tugasin) return await client.reply(from, '📚 Tugas sudah ditambahkan!', id)
+        break;
+      
+      case 'listtugas':
+        if (!tugas.length || tugas.length == 0){
+          await client.reply(from, "Gaada tugas ntap", id);
+        } else {
+          await client.reply(from, "Daftar tugas : ", id);
+          tugas.forEach(function (item, index){
+              client.sendText(from, (index+1) + ". " + item);
+          });
+        }
+        break;
+      
+      case 'hapustugas':
+        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !hapustugas <nomor tugas>_', id);
+        var i = arguments--;
+        const hapusin = delete tugas[i];
+        if (hapusin) return await cl.reply(from, "Tugas dengan nomor " + arguments + " sudah dihapus", id);
+        break;
+
+      //Stiker commands
+
+      case 'halo':
+        await client.sendFileFromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/haloo.mp3', "halo.aac", "Haloo", null, null, null, true);
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/haloo.png');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/halo2.jpeg');
+        break;
+
+      case 'asep':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/asep1.png');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/asep2.png');
+        break;
+
+      case 'tabah':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/tabah1.jpeg');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/tabah2.jpg');
+        break;
+
+      case 'lutelat':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/lotelat.jpeg');
+        break;
+
+      case 'bayu':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/bayu1.jpeg');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/bayu2.jpeg');
+        break;
+
+      case 'payoy':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy.jpg');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy.jpg');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy2.jpeg');
+        break;
+
+      case 'teja':
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja1.jpg');
+        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja2.webp');
         break;
 
       default:

@@ -1,5 +1,5 @@
 module.exports = {
-  prefix: "!",
-  owner: "YOUR NUMBER",
+  prefix: "#",
+  owner: "6281398629564",
   support: "YOUR GROUP ID",
 };
