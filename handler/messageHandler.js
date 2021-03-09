@@ -934,7 +934,7 @@ module.exports = async (client, message) => {
           break;
 
       default:
-        client.reply(from, `Salah command, mohon cek ${botPrefix} untuk daftar command`, id)
+        client.reply(from, `Salah command, mohon cek ${botPrefix}menu untuk daftar command`, id)
         return console.debug(color('red', '➜'), color('yellow', isGroup ? '[GROUP]' : '[PERSONAL]'), `!${command} | ${sender.id} ${isGroup ? 'FROM ' + formattedTitle : ''}`, color('yellow', moment().format()));
     }
 
