@@ -8,6 +8,17 @@ const _function = require('../lib/function');
 const _txt = require('../lib/text');
 const color = require('../util/colors');
 const tugas = [];
+const judullist = [];
+const daftarlist = [];
+
+//Folder Sistem
+//const setting = JSON.parse(fs.readFileSync('./settings/setting.json'))
+//const banned = JSON.parse(fs.readFileSync('./settings/banned.json'))
+
+//Setting
+//let{
+//  ownerNumber,
+//} = setting
 
 module.exports = async (client, message) => {
   try {
@@ -17,6 +28,8 @@ module.exports = async (client, message) => {
     const { id, body, mimetype, type, t, from, sender, content, caption, author, isGroupMsg, chat, quotedMsg, quotedMsgObj, mentionedJidList } = message;
     const { name, shortName, pushname, formattedName } = sender;
     const { formattedTitle, isGroup, contact, groupMetadata } = chat;
+
+    const { ind } = require('../message/text/lang/')
 
     const botOwner = set.owner;
     const botGroup = set.support;
@@ -38,8 +51,27 @@ module.exports = async (client, message) => {
 
     const command = validMessage.trim().split(' ')[0].slice(1);
     const arguments = validMessage.trim().split(' ').slice(1);
+    const arg = validMessage.substring(validMessage.indexOf(' ') + 1)
     const senderId = sender.id.split('@')[0] || from.split('@')[0];
     const urlRegex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+
+    const santet = [
+      'Muntah Paku',
+      'Meninggoy',
+      'Berak Paku',
+      'Muntah Rambut',
+      'Ketempelan MONYET!!!',
+      'Menjadi Gila',
+      'Menjadi manusiawi',
+      'jomblo selamanya',
+      'ga bisa berak',
+      'ketiban pesawat',
+      'jadi anak mulung',
+      'ga jadi pacar zeus',
+      'jadi jelek',
+      'noob vr',
+      'jadi botfrag terus'
+      ]
 
     // debug
     console.debug(color('green', '➜'), color('yellow', isGroup ? '[GROUP]' : '[PERSONAL]'), `!${command} | ${sender.id} ${isGroup ? 'FROM ' + formattedTitle : ''}`, color('yellow', moment().format()));
@@ -175,7 +207,7 @@ module.exports = async (client, message) => {
         const isNumberValid = await client.checkNumberStatus(arguments[0] + '@c.us');
         if (isNumberValid.status === 200)
           await client
-            .addParticipant(from, isNumberValid.id._serialized)
+            .addParticipant(from, `${arguments[0]}@c.us`)
             .then(async () => await client.reply(from, '_🎉 Berhasil menambahkan Member, Berikan ucapan Selamat datang!_', id))
             .catch(async (error) => await client.reply(from, '_🥺 Gagal menambahkan member! kemungkinan member sudah diblock oleh Bot! untuk unblockir silahkan DM ke *https://wa.me/6288225610884*_', id));
         break;
@@ -498,8 +530,9 @@ module.exports = async (client, message) => {
 
       case 'musik':
       case 'music':
-        //await client.reply(from, "Mon maap, fitur sementara dimatikan karena menyebabkan ketidakstabilan server 🙏", id);
-        //break;
+        await client.reply(from, "Mon maap, fitur sementara dimatikan karena menyebabkan ketidakstabilan server 🙏", id);
+        break;
+        /*
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
         const musicLink = await _function.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
@@ -512,6 +545,7 @@ module.exports = async (client, message) => {
         }
         //await client.sendPtt(from, musicLink, id);
         break;
+        */
 
       case 'downtiktok':
         return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan!_', id);
@@ -735,6 +769,80 @@ module.exports = async (client, message) => {
         await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja1.jpg');
         await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja2.webp');
         break;
+
+      case 'resi':
+        if (arguments.length !== 2) return client.reply(from, `Maaf, format pesan salah.\nSilahkan ketik pesan dengan ${botPrefix}resi <kurir> <no_resi>\n\nKurir yang tersedia:\njne, pos, tiki, wahana, jnt, rpx, sap, sicepat, pcp, jet, dse, first, ninja, lion, idl, rex`, id);
+        const kurirs = ['jne', 'pos', 'tiki', 'wahana', 'jnt', 'rpx', 'sap', 'sicepat', 'pcp', 'jet', 'dse', 'first', 'ninja', 'lion', 'idl', 'rex'];
+        if (!kurirs.includes(arguments[0])) return client.sendText(from, `Maaf, jenis ekspedisi pengiriman tidak didukung layanan ini hanya mendukung ekspedisi pengiriman ${kurirs.join(', ')} Tolong periksa kembali.`);
+        console.log('Memeriksa No Resi', arguments[1], 'dengan ekspedisi', arguments[0]);
+        _function.cekResi(arguments[0], arguments[1]).then((result) => client.sendText(from, result));
+        break;
+
+      case 'nhder':
+        if (arguments.length !== 1) return await client.reply(from, 'Silakan masukkan kode dengan benar!', id)
+        await client.reply(from, ind.wait(), id)
+        try {
+            const kodeDojin = arguments[0]
+            const proccessLink = `https://nhder.herokuapp.com/download/nhentai/${kodeDojin}/zip`
+            const captionDojin = `------[ NHENTAI DOWNLOADER ]------\n\n➸ Kode doujin: ${kodeDojin}`
+            await client.sendText(from, captionDojin)
+            await client.sendFileFromUrl(from, proccessLink, `${kodeDojin}.zip`, '' , id)
+        } catch (err) {
+            console.error(err)
+              await client.reply(from, `Error!\n${err}`, id)
+        }
+        break
+
+        case 'translate':   
+          if (arguments.length != 1) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
+          if (!quotedMsg) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
+          const quoteText = quotedMsg.type == 'chat' ? quotedMsg.body : quotedMsg.type == 'image' ? quotedMsg.caption : ''
+          _function.translate(quoteText, arguments[0])
+              .then((result) => client.sendText(from, result))
+              .catch(() => client.sendText(from, 'Error, Kode bahasa salah.'))
+          break
+        
+        /*
+        case 'sider':
+          if (!isGroupMsg) return client.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)                
+          if (!quotedMsg) return client.reply(from, `Tolong Reply Pesan Bot`, id)
+          if (!quotedMsgObj.fromMe) return client.reply(from, `Tolong Reply Pesan Bot`, id)
+          try {
+              const reader = await client.getMessageReaders(quotedMsgObj.id)
+              let list = ''
+              for (let pembaca of reader) {
+                list += `- @${pembaca.id.replace(/@c.us/g, '')}\n` 
+              }
+              const allMembers = groupMetadata.participants.map((member) => `@${member.id.split('@')[0]}`);
+              for( var i = 0; i < arr.length; i++){ 
+                var j = 0
+                if ( allMembers[i] === ) {
+                    arr.splice(i, 1); 
+                }
+            }
+          await client.sendTextWithMentions(from, `Ngeread doangg.. Nimbrung kagaa\n${list}`)
+          } catch(err) {
+              console.log(err)
+              client.reply(from, `Maaf, Belum Ada Yang Membaca Pesan Bot atau Mereka Menonaktifkan Read Receipts`, id)    
+          }
+          break
+          */
+        case 'santet':
+          if (!isGroupMsg) return client.reply(from, 'Maaf, perintah ini hanya dapat dipakai didalam grup!', id)
+          if (mentionedJidList.length === 0) return client.reply(from, 'Tag member yang mau disantet\n\nContoh : /santet @tag | kalo berak kaga di siram', id)
+          if (arguments.length === 1) return client.reply(from, 'Masukkan alasan kenapa menyantet dia!!\n\nContoh : /santet @tag | kalo berak kaga di siram', id)
+              const terima1 = santet[Math.floor(Math.random() * (santet.length))]
+              const target = arg.split('|')[0]
+              const alasan = arg.split('|')[1]
+              await client.sendTextWithMentions(from, `Santet terkirim ke ${target}, Dengan alasan${alasan}\n\nJenis Santet Yang di Terima Korban adalah *${terima1}*`)
+          break
+
+        case 'addjudullist':
+          if (arguments.length === 0) return client.reply(from, `Buat list dengan judul\n\nContoh : ${botPrefix}addlist <judul list>`);
+          if (judullist.length > 1) return client.reply(from, `Mohon untuk reset list terlebih dahulu dengan command ${botPrefix}resetlist`);
+          const judulin = judullist.push(arguments);
+          if (judulin) return client.reply(from, `List sudah ditambahkan, untuk menambahkan isi list menggunakan command ${botPrefix}addlist`);
+          break;
 
       default:
         return console.debug(color('red', '➜'), color('yellow', isGroup ? '[GROUP]' : '[PERSONAL]'), `!${command} | ${sender.id} ${isGroup ? 'FROM ' + formattedTitle : ''}`, color('yellow', moment().format()));

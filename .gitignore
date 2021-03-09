@@ -3,3 +3,6 @@ node_modules
 
 # client session
 SAD_CLIENT.data.json
+
+# logs client
+logs
