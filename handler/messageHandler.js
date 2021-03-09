@@ -842,10 +842,10 @@ module.exports = async (client, message) => {
         case 'translate':   
           if (arguments.length != 1) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
           if (!quotedMsg) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
-          const quoteText = quotedMsg.type == 'chat' ? quotedMsg.body : quotedMsg.type == 'image' ? quotedMsg.caption : ''
+          const quoteText = quotedMsg.body
           _function.translate(quoteText, arguments[0])
               .then((result) => client.sendText(from, result))
-              .catch(() => client.sendText(from, 'Error, Kode bahasa salah.'))
+              .catch(() => client.sendText(from, 'Error, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))
           break
         
         /*
