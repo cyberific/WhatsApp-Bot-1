@@ -625,7 +625,8 @@ module.exports = async (client, message) => {
         const musicLink = await _function.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
         try {
-          await client.sendPtt(from, musicLink, id);
+          await client.sendFile(from, musiclink, "halo.aac", "Haloo", id, null, true);
+          //await client.sendPtt(from, musicLink, id);
           console.log("music download success " + musicLink);
         } catch (err) {
           await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
