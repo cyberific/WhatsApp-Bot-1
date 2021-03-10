@@ -620,22 +620,20 @@ module.exports = async (client, message) => {
 
       case 'musik':
       case 'music':
-        await client.reply(from, "Mon maap, fitur sementara dimatikan karena menyebabkan ketidakstabilan server 🙏", id);
-        break;
-        /*
+        await client.reply(from, "Fitur masih berstatus *beta*, dimohon untuk tidak terlalu sering digunakan", id);
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
         const musicLink = await _function.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
         try {
-        await client.sendPtt(from, "${musicLink}", id);
-        console.log("music download success " + musicLink);
+          await client.sendPtt(from, musicLink, id);
+          console.log("music download success " + musicLink);
         } catch (err) {
-        console.log("music download error " + musicLink);
-        console.log(err.stack);
+          await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
+          console.log("music download error " + musicLink);
+          console.log(err.stack);
         }
         //await client.sendPtt(from, musicLink, id);
         break;
-        */
 
       case 'downtiktok':
         return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan!_', id);
@@ -1143,7 +1141,8 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
 
       case 'waifu':
         await client.reply(from, ind.wait(), id)
-        _function.weeaboo.waifu(false)
+        if (arguments === 'nsfw'){ var i = true } else { var i = false }
+        _function.weeaboo.waifu(i)
           .then(async ({ url }) => {
             await client.sendFileFromUrl(from, url, 'waifu.png', '', id)
               .then(() => console.log('Success sending waifu!'))
