@@ -4,12 +4,23 @@ const moment = require('moment');
 const set = require('../settings');
 const fs = require('fs-extra')
 const axios = require("axios").default;
+const Nekos = require('nekos.life');
+const neko = new Nekos();
+const sagiri = require('sagiri');
+const config = require('../config.json')
+const ms = require('parse-ms')
+const toMs = require('ms')
+const translate = require('@vitalets/google-translate-api')
+const uaOverride = config.uaOverride
+const saus = sagiri(config.nao, { results: 5 });
 
 // Library
 const _function = require('../lib/function');
 const _txt = require('../lib/text');
 const color = require('../util/colors');
-const tugas = JSON.parse(fs.readFileSync('./jsonfolder/tugas.json'));
+const { uploadImages } = require('../util/fetcher')
+const tugas = JSON.parse(fs.readFileSync('./database/tugas.json'));
+const _reminder = JSON.parse(fs.readFileSync('./database/reminder.json'))
 const judullist = [];
 const daftarlist = [];
 
@@ -56,7 +67,7 @@ module.exports = async (client, message) => {
     const msgAmount = await client.getAmountOfLoadedMessages();
     if (msgAmount > 3000) await client.cutMsgCache();
 
-    const { id, body, mimetype, type, t, from, sender, content, caption, author, isGroupMsg, chat, quotedMsg, quotedMsgObj, mentionedJidList } = message;
+    const { id, body, mimetype, type, t, from, sender, content, caption, author, isGroupMsg, isMedia, chat, quotedMsg, quotedMsgObj, mentionedJidList } = message;
     const { name, shortName, pushname, formattedName } = sender;
     const { formattedTitle, isGroup, contact, groupMetadata } = chat;
 
@@ -71,6 +82,17 @@ module.exports = async (client, message) => {
     const isOwner = groupMetadata ? groupMetadata.participants.find((res) => res.id === sender.id).isSuperAdmin : undefined;
     const isBotAdmin = groupMetadata ? groupMetadata.participants.find((res) => res.id === botNumber).isAdmin : undefined;
 
+    const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
+    const isQuotedVideo = quotedMsg && quotedMsg.type === 'video'
+    const isQuotedSticker = quotedMsg && quotedMsg.type === 'sticker'
+    const isQuotedGif = quotedMsg && quotedMsg.mimetype === 'image/gif'
+    const isQuotedAudio = quotedMsg && quotedMsg.type === 'audio'
+    const isQuotedVoice = quotedMsg && quotedMsg.type === 'ptt'
+    const isImage = type === 'image'
+    const isVideo = type === 'video'
+    const isAudio = type === 'audio'
+    const isVoice = type === 'ptt'
+
     /**
      * Premium code / feature
      * Kamu bisa melakukan donasi terlebih dahulu untuk mendapatkan seluruh kode
@@ -83,6 +105,7 @@ module.exports = async (client, message) => {
     const command = validMessage.trim().split(' ')[0].slice(1);
     const arguments = validMessage.trim().split(' ').slice(1);
     const arg = validMessage.substring(validMessage.indexOf(' ') + 1)
+    const q = arguments.join(' ')
     const senderId = sender.id.split('@')[0] || from.split('@')[0];
     const urlRegex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 
@@ -338,7 +361,7 @@ module.exports = async (client, message) => {
         if ( groupMetadata.desc && groupMetadata.desc.includes("#noping") ) 
         { await client.sendText(from, '_*⚠️ Gaboleh spam disini yak*_') } 
         else {
-          await client.sendTextWithMentions(from, `_ Summon _\n\n${allMembers.join('\n')}\n`); }
+          await client.sendTextWithMentions(from, `_*Summon*_\n\n${allMembers.join('\n')}\n`); }
         break;
 
       case 'votekick':
@@ -477,7 +500,7 @@ module.exports = async (client, message) => {
       case 'murrotal':
       case 'murottal':
         try {
-        if (arguments.length != 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}murrotal <surah> <ayat>_`, id);
+        if (arguments.length != 2) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}murrotal <ayat> <surat>_`, id);
         const murottalAudio = await _function.quran.murottal(arguments);
         await client.sendPtt(from, murottalAudio, id);
         } catch (error) {
@@ -490,6 +513,30 @@ module.exports = async (client, message) => {
         const tafsir = await _function.quran.tafsir(arguments);
         await client.reply(from, tafsir, id);
         break;
+
+        case 'jadwalsholat':
+          case 'jadwalsolat':
+              if (!isRegistered) return await client.reply(from, ind.notRegistered(), id)
+              if (!q) return await client.reply(from, ind.wrongFormat(), id)
+              await client.reply(from, ind.wait(), id)
+              _function.misc.jadwalSholat(q)
+                  .then((data) => {
+                      data.map(async ({isya, subuh, dzuhur, ashar, maghrib, terbit}) => {
+                          const x = subuh.split(':')
+                          const y = terbit.split(':')
+                          const xy = x[0] - y[0]
+                          const yx = x[1] - y[1]
+                          const perbandingan = `${xy < 0 ? Math.abs(xy) : xy} jam ${yx < 0 ? Math.abs(yx) : yx} menit`
+                          const msg = `Jadwal sholat untuk ${q} dan sekitarnya ( *${tanggal}* )\n\nDzuhur: ${dzuhur}\nAshar: ${ashar}\nMaghrib: ${maghrib}\nIsya: ${isya}\nSubuh: ${subuh}\n\nDiperkirakan matahari akan terbit pada pukul ${terbit} dengan jeda dari subuh sekitar ${perbandingan}`
+                          await client.reply(from, msg, id)
+                          console.log('Success sending jadwal sholat!')
+                      })
+                  })
+                  .catch(async (err) => {
+                      console.error(err)
+                      await client.reply(from, 'Error!', id)
+                  })
+          break
 
       case 'quotes':
         break;
@@ -643,7 +690,7 @@ module.exports = async (client, message) => {
 
       case 'anime':
         if (arguments.length < 1) return await client.reply(from, `_Penggunaan : ${botPrefix}anime <judul>_`, id);
-        const getAnime = await _function.anime(arguments.join(' '));
+        const getAnime = await _function.animesearch(arguments.join(' '));
         await client.sendImage(from, getAnime.picUrl, `${t}_${sender.id}.jpg`, getAnime.caption, id);
         break;
 
@@ -738,15 +785,15 @@ module.exports = async (client, message) => {
         break;
 
       case 'loginml':
-        const ml = ` Login ml dong
-        aji @628888418207
-        wahyu @6281413543830
-        yasman @6281285600258
-        junas	@628978113198
-        ikhsan @6281510026269
-        sese @6281511529199
-        dito @6285155277438
-        jidni @62895330810346`;
+        const ml = `Login ml dong
+aji @628888418207
+wahyu @6281413543830
+yasman @6281285600258
+junas @628978113198
+ikhsan @6281510026269
+sese @6281511529199
+dito @6285155277438
+jidni @62895330810346`;
 
         await client.sendTextWithMentions(from, ml);
         break;
@@ -838,41 +885,7 @@ module.exports = async (client, message) => {
               await client.reply(from, `Error!\n${err}`, id)
         }
         break
-
-        case 'translate':   
-          if (arguments.length != 1) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
-          if (!quotedMsg) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
-          const quoteText = quotedMsg.body
-          _function.translate(quoteText, arguments[0])
-              .then((result) => client.sendText(from, result))
-              .catch(() => client.sendText(from, 'Error, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))
-          break
-        
-        /*
-        case 'sider':
-          if (!isGroupMsg) return client.reply(from, `Perintah ini hanya bisa di gunakan dalam group!`, id)                
-          if (!quotedMsg) return client.reply(from, `Tolong Reply Pesan Bot`, id)
-          if (!quotedMsgObj.fromMe) return client.reply(from, `Tolong Reply Pesan Bot`, id)
-          try {
-              const reader = await client.getMessageReaders(quotedMsgObj.id)
-              let list = ''
-              for (let pembaca of reader) {
-                list += `- @${pembaca.id.replace(/@c.us/g, '')}\n` 
-              }
-              const allMembers = groupMetadata.participants.map((member) => `@${member.id.split('@')[0]}`);
-              for( var i = 0; i < arr.length; i++){ 
-                var j = 0
-                if ( allMembers[i] === ) {
-                    arr.splice(i, 1); 
-                }
-            }
-          await client.sendTextWithMentions(from, `Ngeread doangg.. Nimbrung kagaa\n${list}`)
-          } catch(err) {
-              console.log(err)
-              client.reply(from, `Maaf, Belum Ada Yang Membaca Pesan Bot atau Mereka Menonaktifkan Read Receipts`, id)    
-          }
-          break
-          */
+      
         case 'santet':
           if (!isGroupMsg) return client.reply(from, 'Maaf, perintah ini hanya dapat dipakai didalam grup!', id)
           if (mentionedJidList.length === 0) return client.reply(from, 'Tag member yang mau disantet\n\nContoh : /santet @tag | kalo berak kaga di siram', id)
@@ -932,6 +945,262 @@ module.exports = async (client, message) => {
           }
           if (daftarlist.length === 0 && judullist.length === 0) return client.reply(from, `List sudah di reset !`, id);
           break;
+
+      case 'alkitab':
+        if (arguments.length === 0) return client.reply(from, `Mengirim detail ayat al-kitab dari pencarian \n\nContoh : ${botPrefix}alkitab <pencarian>`, id);
+        if (!q) return await client.reply(from, ind.wrongFormat(), id)
+        await client.reply(from, ind.wait(), id)
+        _function.misc.alkitab(q)
+            .then(async ({ result }) => {
+                let alkitab = '-----[ *AL-KITAB* ]-----'
+                for (let i = 0; i < result.length; i++) {
+                    alkitab +=  `\n\n➸ *Ayat*: ${result[i].ayat}\n➸ *Isi*: ${result[i].isi}\n➸ *Link*: ${result[i].link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
+                }
+                await client.reply(from, alkitab, id)
+                console.log('Success sending Al-Kitab!')
+            })
+        break
+
+      case 'reminder': // by Slavyan
+        const remindhelp= `
+*${botPrefix}reminder*
+Pengingat. 
+*s* - detik
+*m* - menit
+*h* - jam
+*d* - hari
+Aliases: -
+Usage: *${botPrefix}reminder* 10s | pesan_pengingat
+        `
+        if (arguments.length === 0) return client.reply(from, remindhelp, id)
+        if (!q.includes('|')) return await client.reply(from, ind.wrongFormat(), id)
+        const timeRemind = q.substring(0, q.indexOf('|') - 1)
+        const messRemind = q.substring(q.lastIndexOf('|') + 2)
+        const parsedTime = ms(toMs(timeRemind))
+        _function.reminder.addReminder(sender.id, messRemind, timeRemind, _reminder)
+        await client.sendTextWithMentions(from, `*「 REMINDER 」*\n\nReminder diaktifkan! :3\n\n➸ *Pesan*: ${messRemind}\n➸ *Durasi*: ${parsedTime.days} hari ${parsedTime.hours} jam ${parsedTime.minutes} menit ${parsedTime.seconds} detik\n➸ *Untuk*: @${sender.id.replace('@c.us', '')}`, id)
+        const intervRemind = setInterval(async () => {
+            if (Date.now() >= _function.reminder.getReminderTime(sender.id, _reminder)) {
+                await client.sendTextWithMentions(from, `⏰ *「 REMINDER 」* ⏰\n\nAkhirnya tepat waktu~ @${sender.id.replace('@c.us', '')}\n\n➸ *Pesan*: ${_function.reminder.getReminderMsg(sender.id, _reminder)}`)
+                _reminder.splice(_function.reminder.getReminderPosition(sender.id, _reminder), 1)
+                fs.writeFileSync('./database/reminder.json', JSON.stringify(_reminder))
+                clearInterval(intervRemind)
+            }
+        }, 1000)
+        break
+
+      case 'infohoax':
+        await client.reply(from, ind.wait(), id)
+        _function.misc.infoHoax()
+          .then(async ({ result }) => {
+              let txt = '*「 HOAXES 」*'
+              for (let i = 0; i < result.length; i++) {
+                  const { tag, title, link } = result[i]
+                  txt += `\n\n➸ *Status*: ${tag}\n➸ *Deskripsi*: ${title}\n➸ *Link*: ${link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
+              }
+              await client.sendFileFromUrl(from, result[0].image, 'hoax.jpg', txt, id)
+              console.log('Success sending info!')
+          })
+          .catch(async (err) => {
+              console.error(err)
+              await client.reply(from, 'Error!', id)
+          })
+        break
+
+      case 'translate':   
+          if (arguments.length === 0) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id\n\nAtau dengan perintah ${botPrefix}translate <bahasa> | <teks>`, id)
+          if (q.includes('|')){
+            const texto = arg.split('|')[1]
+            const languaget = arg.split(' |')[0]
+            _function.translate(texto, languaget).then((result) => client.sendText(from, result)).catch(() => client.sendText(from, 'Error noreply, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))
+            //translate(texto, {to: languaget}).then(res => {client.reply(from, res.text, id)}).catch(() => client.sendText(from, 'Error, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))
+          } else { const quoteText = quotedMsg.body
+            _function.translate(quoteText, arguments[0])
+                .then((result) => client.sendText(from, result))
+                .catch(() => client.sendText(from, 'Error reply, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))}
+          //if (!quotedMsg) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
+          break
+
+      //Weeb Zone
+      case 'neko':
+        console.log('Getting neko image...')
+        await client.sendFileFromUrl(from, (await neko.sfw.neko()).url, 'neko.jpg', '', null, null, true)
+          .then(() => console.log('Success sending neko image!'))
+          .catch(async (err) => {
+            console.error(err)
+            await client.reply(from, 'Error!', id)
+          })
+        break
+
+      case 'animewall':
+        console.log('Getting wallpaper image...')
+          await client.sendFileFromUrl(from, (await neko.sfw.wallpaper()).url, 'wallpaper.jpg', '', null, null, true)
+            .then(() => console.log('Success sending wallpaper image!'))
+            .catch(async (err) => {
+              console.error(err)
+              await client.reply(from, 'Error!', id )
+          })
+        break
+
+      case 'kusonime':
+        if (arguments.length === 0) return client.reply(from, `Mengirim details anime dari web Kusoanime\n\nContoh : ${botPrefix}kusonime <judul anime>`, id);
+        _function.weeaboo.anime(q)
+          .then(async ({ info, link_dl, sinopsis, thumb, title, error, status }) => {
+            if (status === false) {
+              return await client.reply(from, error, id)
+            } else {
+              let animek = `${title}\n\n${info}\n\nSinopsis: ${sinopsis}\n\nLink download:\n${link_dl}`
+              await client.sendFileFromUrl(from, thumb, 'animek.jpg', animek, null, null, true)
+                .then(() => console.log('Success sending anime info!'))
+            }
+          })
+          .catch(async (err) => {
+            console.error(err)
+            await client.reply(from, 'Error!', id)
+          })
+        break
+      
+      case 'komiku':
+        _function.weeaboo.manga(q)
+          .then(async ({ genre, info, link_dl, sinopsis, thumb }) => {
+            let mangak = `${info}${genre}\nSinopsis: ${sinopsis}\nLink download:\n${link_dl}`
+            await client.sendFileFromUrl(from, thumb, 'mangak.jpg', mangak, null, null, true)
+              .then(() => console.log('Success sending manga info!'))
+          })
+          .catch(async (err) => {
+            console.error(err)
+            await client.reply(from, 'Error!', id)
+          })
+        break
+      
+      case 'wait':
+        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar screenshot yang ingin dicari sumber anime nya lalu berikan caption ${botPrefix}wait_`, id);
+        if (isMedia && isImage || isQuotedImage){
+          await client.reply(from, ind.wait(), id)
+          const encryptMedia = isQuotedImage ? quotedMsg : message
+          const _mimetype = isQuotedImage ? quotedMsg.mimetype : mimetype
+          const mediaData = await decryptMedia(encryptMedia, uaOverride)
+          const imageBase64 = `data:${_mimetype};base64,${mediaData.toString('base64')}`
+          _function.weeaboo.wait(imageBase64)
+            .then(async (result) => {
+              if (result.docs && result.docs.length <= 2) {
+                return await client.reply(from, 'Anime not found! :(', id)
+              } else {
+                const { title, title_romaji, title_english, episode, similarity, filename, at, tokenthumb, anilist_id } = result.docs[0]
+                let teks = ''
+                teks += `*Anime Result*\n\n`
+                if (similarity < 0.9) {
+                  client.reply('Low similiarity. \n\nMungkin anda bisa mencoba crop terlebih dahulu atau dengan gambar lain')
+                } else {
+                  teks += `*Title*: ${title}\n*Romaji*: ${title_romaji}\n*English*: ${title_english}\n*Episode*: ${episode}\n*Similarity*: ${(similarity * 100).toFixed(1)}%`
+                  const video = `https://media.trace.moe/video/${anilist_id}/${encodeURIComponent(filename)}?t=${at}&token=${tokenthumb}`
+                  console.log(video)
+                  try {
+                    await client.sendFileFromUrl(from, video, `waitresult.mp4`, teks, id)
+                    .then(() => console.log('Success sending anime source!'))
+                  } catch (error) {
+                    await client.reply(from, teks, id)
+                    console.log('Video send error, trying without video')
+                    console.log(error.stack)
+                  }
+                }
+              }
+            })
+              .catch(async (err) => {
+              console.error(err)
+              await client.reply(from, 'Error!', id)
+            })
+          }
+        break
+
+      case 'sauce':
+        if (isMedia && isImage || isQuotedImage) {
+          await client.reply(from, ind.wait(), id)
+          const encryptMedia = isQuotedImage ? quotedMsg : message
+          const mediaData = await decryptMedia(encryptMedia, uaOverride)
+          try {
+              const imageLink = await uploadImages(mediaData, `sauce.${sender.id}`)
+              console.log('Searching for source...')
+              const results = await saus(imageLink)
+              for (let i = 0; i < results.length; i++) {
+                  let teks = ''
+                  if (results[i].similarity < 80.00) {
+                      teks = 'Low similarity. 🤔\n\n'
+                  } else {
+                      teks += `*Link*: ${results[i].url}\n*Site*: ${results[i].site}\n*Author name*: ${results[i].authorName}\n*Author link*: ${results[i].authorUrl}\n*Similarity*: ${results[i].similarity}%`
+                      await client.sendLinkWithAutoPreview(from, results[i].url, teks)
+                          .then(() => console.log('Source found!'))
+                  }
+              }
+          } catch (err) {
+              console.error(err)
+              await client.reply(from, 'Error!', id)
+          }
+        } else {
+          await client.reply(from, ind.wrongFormat(), id)
+        }
+        break
+
+      case 'waifu':
+        await client.reply(from, ind.wait(), id)
+        _function.weeaboo.waifu(false)
+          .then(async ({ url }) => {
+            await client.sendFileFromUrl(from, url, 'waifu.png', '', id)
+              .then(() => console.log('Success sending waifu!'))
+          })
+            .catch(async (err) => {
+              console.error(err)
+              await client.reply(from, 'Error!', id)
+            })
+        break
+      
+      case 'anitoki':
+        await client.reply(from, ind.wait(), id)
+        _function.weeaboo.anitoki()
+          .then(async ({ result }) => {
+              let anitoki = '-----[ *ANITOKI LATEST* ]-----'
+              for (let i = 0; i < result.length; i++) {
+                anitoki += `\n\n➸ *Title*: ${result[i].title}\n➸ *URL*: ${result[i].link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
+              }
+                await client.reply(from, anitoki, id)
+          })
+          .catch(async (err) => {
+            console.error(err)
+            await client.reply(from, 'Error!', id)
+          })
+        break
+
+      case 'neonime':
+        await client.reply(from, ind.wait(), id)
+        _function.weeaboo.neonime()
+          .then(async ({ status, result }) => {
+              if (status !== 200) return await client.reply(from, 'Not found.', id)
+              let neoInfo = '-----[ *NEONIME LATEST* ]-----'
+              for (let i = 0; i < result.length; i++) {
+                const { date, title, link, desc } = result[i]
+                neoInfo += `\n\n➸ *Title*: ${title}\n➸ *Date*: ${date}\n➸ *Synopsis*: ${desc}\n➸ *Link*: ${link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
+              }
+                await client.reply(from, neoInfo, id)
+                console.log('Success sending Neonime latest update!')
+          })
+          .catch(async (err) => {
+            console.error(err)
+            await client.reply(from, 'Error!', id)
+          })
+        break
+      
+        case 'animesticker':
+        _function.weeaboo.snime()
+            .then(async (body) => {
+                const wifegerak = body.split('\n')
+                const wifegerakx = wifegerak[Math.floor(Math.random() * wifegerak.length)]
+                await client.sendStickerfromUrl(from, wifegerakx)
+            })
+            .catch(async (err) => {
+                console.error(err)
+                await client.reply(from, 'Error!', id)
+            })
+    break
 
       default:
         client.reply(from, `Salah command, mohon cek ${botPrefix}menu untuk daftar command`, id)

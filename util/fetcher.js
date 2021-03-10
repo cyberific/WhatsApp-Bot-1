@@ -1,6 +1,7 @@
 const fetch = require('node-fetch')
 const FormData = require('form-data')
 const fs = require('fs')
+const fileType = require('file-type')
 const { fromBuffer } = require('file-type')
 const resizeImage = require('./imageProcessing')
 
@@ -72,8 +73,8 @@ const fetchBase64 = (url, mimetype) => {
 const uploadImages = (buffData, type) => {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
-        const { ext } = await fromBuffer(buffData)
-        const filePath = 'utils/tmp.' + ext
+        const { ext } = await fileType(buffData)
+        const filePath = 'util/tmp.' + ext
         const _buffData = type ? await resizeImage(buffData, false) : buffData
         fs.writeFile(filePath, _buffData, { encoding: 'base64' }, (err) => {
             if (err) return reject(err)
