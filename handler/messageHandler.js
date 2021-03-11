@@ -917,7 +917,7 @@ jidni @62895330810346`;
       //Stiker commands
 
       case 'halo':
-        await client.sendFileFromUrl(from, './mediapreload/haloo.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendFile(from, './mediapreload/haloo.mp3', "halo.mp3", "Haloo", null, null, true);
         await client.sendStickerfromUrl(from, 'https://i.ibb.co/StZTdND/haloo.png');
         await client.sendStickerfromUrl(from, 'https://i.ibb.co/PNCvDNJ/halo2.jpg');
         break;
@@ -934,7 +934,7 @@ jidni @62895330810346`;
 
       case 'lutelat':
         await client.sendStickerfromUrl(from, 'https://i.ibb.co/Y2mnHhm/lotelat.jpg');
-        await client.sendFileFromUrl(from, './mediapreload/telat.mp3', "telat.mp3", "telaat", null, null, null, true);
+        await client.sendFile(from, './mediapreload/telat.mp3', "telat.mp3", "telaat", null, null, true);
         break;
 
       case 'bayu':
@@ -954,20 +954,20 @@ jidni @62895330810346`;
         break;
       
       case 'indihome':
-        await client.sendFileFromUrl(from, './mediapreload/indihome.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendFile(from, './mediapreload/indihome.mp3', "halo.mp3", "Haloo", null, null, true);
         await client.sendStickerfromUrl(from, 'https://i.ibb.co/k8xwK8s/image.png');
         break;
 
       case 'palpale':
-        await client.sendFileFromUrl(from, './mediapreload/pale.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendFile(from, './mediapreload/pale.mp3', "halo.mp3", "Haloo", null, null, true);
         break;
 
       case 'yamete':
-        await client.sendFileFromUrl(from, './mediapreload/masukin.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendFile(from, './mediapreload/masukin.mp3', "halo.mp3", "Haloo", null, null, true);
         break;
       
       case 'papepap':
-        await client.sendFileFromUrl(from, './mediapreload/pap', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendFile(from, './mediapreload/pap', "halo.mp3", "Haloo", null, null, true);
         break;
 
       case 'resi':
