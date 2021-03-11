@@ -1380,7 +1380,7 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                     })
                     response.data.pipe(writer)
                     console.log(`---> dir path : ${dir}`)
-                    await client.sendFile(from, dir, `waitresult.mp4`, teks, id)
+                    await client.sendFile(from, dir, `result.mp4`, null, id)
                     await client.reply(from, teks, id)
                       .then(() => console.log('Success sending anime source!'))
                     
