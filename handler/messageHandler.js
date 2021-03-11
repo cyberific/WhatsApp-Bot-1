@@ -1451,6 +1451,8 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
 
     return;
   } catch (err) {
+    client.sendText(from, 'Syid, server crash!\n\nTolong hubungi owner agar dinyalakan kembali')
+    client.sendText(from, `error log\n\n ${err}`)
     console.log(err);
   }
 };
