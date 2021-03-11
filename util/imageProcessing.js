@@ -13,7 +13,6 @@ module.exports = resizeImage = (buff, encode) => new Promise(async (resolve, rej
     console.log('Resizeing image...')
     const { mime } = await fileType(buff)
     sharp(buff, { failOnError: false })
-        .resize(512, 512)
         .toBuffer()
         .then(resizedImageBuffer => {
             if (!encode) return resolve(resizedImageBuffer)

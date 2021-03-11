@@ -1,5 +1,41 @@
 const fs = require('fs-extra')
+const set = require('../../../settings');
+const prefix = set.prefix;
 
+
+exports.profile = (username, status, benet, adm) => {
+    return `-----[ *USER INFO* ]-----\n\n➸ *Username*: ${username}\n➸ *Status*: ${status}\n➸ *Banned*: ${benet}\n➸ *Admin*: ${adm}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
+}
+
+exports.listBlock = (blockNumber) => {
+    return `------[ HALL OF SHAME ]------\n\nTotal diblokir: *${blockNumber.length}* user\n`
+}
+
+exports.hadis = () => {
+    return `
+*Daftar hadis*:
+1. Hadis Bukhari ada 6638 hadis
+    _usage_: ${prefix}hadis bukhari 1
+2. Hadis Muslim ada 4930 hadis
+    _usage_: ${prefix}hadis muslim 25
+3. Hadis Tirmidzi ada 3625 hadis
+    _usage_: ${prefix}hadis tirmidzi 10
+4. Hadis nasai ada 5364 hadis
+    _usage_: ${prefix}hadis nasai 6
+5. Hadis Ahmad ada 4305 hadis
+    _usage_: ${prefix}hadis ahmad 5
+6. Hadis Abu Daud ada 4419 hadis
+    _usage_: ${prefix}hadis abudaud 45
+7. Hadis Malik ada 1587 hadis
+    _usage_: ${prefix}hadis malik 45
+8. Hadis Ibnu Majah ada 4285 hadis
+    _usage_: ${prefix}hadis ibnumajah 8
+9. Hadis Darimi ada 2949 hadis
+    _usage_: ${prefix}hadis darimi 3
+
+*Semoga bermanfaat*
+    `
+}
 
 exports.wait = () => {
     return `Mohon tunggu sebentar~`

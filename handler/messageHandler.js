@@ -1,5 +1,4 @@
 const { decryptMedia } = require('@open-wa/wa-automate');
-var admin = require('firebase-admin');
 const moment = require('moment');
 const set = require('../settings');
 const fs = require('fs-extra')
@@ -10,9 +9,13 @@ const sagiri = require('sagiri');
 const config = require('../config.json')
 const ms = require('parse-ms')
 const toMs = require('ms')
-const translate = require('@vitalets/google-translate-api')
+const { spawn } = require('child_process')
+var http = require('http');
+const path = require('path')
 const uaOverride = config.uaOverride
 const saus = sagiri(config.nao, { results: 5 });
+
+const errorImg = 'https://i.ibb.co/jRCpLfn/user.png'
 
 // Library
 const _function = require('../lib/function');
@@ -21,6 +24,7 @@ const color = require('../util/colors');
 const { uploadImages } = require('../util/fetcher')
 const tugas = JSON.parse(fs.readFileSync('./database/tugas.json'));
 const _reminder = JSON.parse(fs.readFileSync('./database/reminder.json'))
+const _ban = JSON.parse(fs.readFileSync('./database/banned.json'))
 const judullist = [];
 const daftarlist = [];
 
@@ -53,15 +57,6 @@ function ngelisttugas(){
   return list;
 }
 
-//Folder Sistem
-//const setting = JSON.parse(fs.readFileSync('./settings/setting.json'))
-//const banned = JSON.parse(fs.readFileSync('./settings/banned.json'))
-
-//Setting
-//let{
-//  ownerNumber,
-//} = setting
-
 module.exports = async (client, message) => {
   try {
     const msgAmount = await client.getAmountOfLoadedMessages();
@@ -82,6 +77,9 @@ module.exports = async (client, message) => {
     const isOwner = groupMetadata ? groupMetadata.participants.find((res) => res.id === sender.id).isSuperAdmin : undefined;
     const isBotAdmin = groupMetadata ? groupMetadata.participants.find((res) => res.id === botNumber).isAdmin : undefined;
 
+    const groupId = isGroupMsg ? chat.groupMetadata.id : ''
+    const groupAdmins = isGroupMsg ? await client.getGroupAdmins(groupId) : ''
+
     const isQuotedImage = quotedMsg && quotedMsg.type === 'image'
     const isQuotedVideo = quotedMsg && quotedMsg.type === 'video'
     const isQuotedSticker = quotedMsg && quotedMsg.type === 'sticker'
@@ -92,6 +90,14 @@ module.exports = async (client, message) => {
     const isVideo = type === 'video'
     const isAudio = type === 'audio'
     const isVoice = type === 'ptt'
+
+    const isBanned = _ban.includes(sender.id)
+    const isGroupAdmins = groupAdmins.includes(sender.id) || false
+
+    global.voterslistfile = '/poll_voters_Config_' + chat.id + '.json'
+    global.pollfile = '/poll_Config_' + chat.id + '.json'
+
+    const blockNumber = await client.getBlockedIds()
 
     /**
      * Premium code / feature
@@ -106,7 +112,6 @@ module.exports = async (client, message) => {
     const arguments = validMessage.trim().split(' ').slice(1);
     const arg = validMessage.substring(validMessage.indexOf(' ') + 1)
     const q = arguments.join(' ')
-    const senderId = sender.id.split('@')[0] || from.split('@')[0];
     const urlRegex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 
     const santet = [
@@ -147,6 +152,11 @@ module.exports = async (client, message) => {
 
     const allChats = await client.getAllChats();
     switch (command) {
+      case 'speed':
+      case 'ping':
+            await client.sendText(from, `Pong!!!!\nSpeed: ${_function.processTime(t, moment())} _Second_`)
+            break
+
       case 'resetlimit':
         /**
          * Premium code / feature
@@ -154,15 +164,21 @@ module.exports = async (client, message) => {
          * lakukan donasi melalui link ini https://bit.ly/34IDvrD
          */
         break;
+      
+      case 'getses':
+          if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id)
+          const ses = await client.getSnapshot()
+          await client.sendFile(from, ses, 'session.png', ind.doneOwner())
+      break
 
       case 'unblock':
-        if (senderId !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
         await client.contactUnblock(arguments[0] + 'c.us');
         return await client.reply(from, '_🟢 Berhasil *Unblock* user!_', id);
         break;
 
       case 'leaveall':
-        if (senderId !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
         const allGroups = await client.getAllGroups();
         allGroups.forEach(async (group) => {
           if (!group.id !== botGroup) {
@@ -187,7 +203,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'clearall':
-        if (senderId !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
         allChats.forEach(async (chat) => {
           await client.clearChat(chat.id);
         });
@@ -195,7 +211,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'bc':
-        if (senderId !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
         if (arguments.length < 1) return;
         await allChats.forEach(async (chat) => {
           await client.sendText(chat.id, arguments.join(' '));
@@ -212,12 +228,51 @@ module.exports = async (client, message) => {
         break;
 
       case 'ban':
-        /**
-         * Premium code / feature
-         * Kamu bisa melakukan donasi terlebih dahulu untuk mendapatkan seluruh kode
-         * lakukan donasi melalui link ini https://bit.ly/34IDvrD
-         */
-        break;
+          if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id)
+          if (arguments[0] === 'add') {
+              if (mentionedJidList.length !== 0) {
+                  for (let benet of mentionedJidList) {
+                      if (benet === botNumber) return await client.reply(from, ind.wrongFormat(), id)
+                      client.contactBlock(benet)
+                      _ban.push(benet)
+                      fs.writeFileSync('./database/banned.json', JSON.stringify(_ban))
+                  }
+                  await client.reply(from, 'Mampus lu gw ban', id)
+                  await client.reply(from, ind.doneOwner(), id)
+              } else {
+                  _ban.push(arguments[1] + '@c.us')
+                  client.contactBlock(arguments[1] + '@c.us')
+                  fs.writeFileSync('./database/bot/banned.json', JSON.stringify(_ban))
+                  await client.reply(from, 'Mampus lu gw ban', id)
+                  await client.reply(from, ind.doneOwner(), id)
+              }
+          } else if (arguments[0] === 'del') {
+              if (mentionedJidList.length !== 0) {
+                  if (mentionedJidList[0] === botNumber) return await client.reply(from, ind.wrongFormat(), id)
+                  client.contactUnblock(mentionedJidList[0])
+                  _ban.splice(mentionedJidList[0], 1)
+                  fs.writeFileSync('./database/banned.json', JSON.stringify(_ban))
+                  await client.reply(from, 'Gw maapin dah, udh di unban lu', id)
+                  await client.reply(from, ind.doneOwner(), id)
+              } else{
+                  client.contactUnblock(arguments[1] + '@c.us')
+                  _ban.splice(arguments[1] + '@c.us', 1)
+                  fs.writeFileSync('./database/bot/banned.json', JSON.stringify(_ban))
+                  await client.reply(from, 'Gw maapin dah, udh di unban lu', id)
+                  await client.reply(from, ind.doneOwner(), id)
+              }
+          } else {
+              await client.reply(from, ind.wrongFormat(), id)
+          }
+        break
+
+      case 'listblock':
+          let block = ind.listBlock(blockNumber)
+          for (let i of blockNumber) {
+              block += `@${i.replace('@c.us', '')}\n`
+          }
+          await client.sendTextWithMentions(from, block)
+      break
 
       case 'freespace':
         /**
@@ -381,11 +436,15 @@ module.exports = async (client, message) => {
         break;
 
       case 'vote':
-        /**
-         * Premium code / feature
-         * Kamu bisa melakukan donasi terlebih dahulu untuk mendapatkan seluruh kode
-         * lakukan donasi melalui link ini https://bit.ly/34IDvrD
-         */
+        if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
+        let helpvote = `Command untuk mengadakan voting pada grup
+=====================
+*${botPrefix}pollresult* = Menampilkan hasil voting
+*${botPrefix}addvote* <nomor> = Memvoting kandidat sesuai nomor
+*${botPrefix}addv* <kandidat> = Menambah kandidat yang ingin di voting
+*${botPrefix}addpoll* <judul voting> = Membuat sesi voting dengan judul, jika sebelumnya sudah ada sesi, akan otomatis tertimpa
+`
+          client.reply(from, helpvote, id)
         break;
 
       case 'gjodoh':
@@ -417,6 +476,38 @@ module.exports = async (client, message) => {
         const senderPicture = sender.profilePicThumbObj.eurl ? sender.profilePicThumbObj.eurl : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
         await client.sendImage(from, senderPicture, formattedName, `_🎉 Group Member [ *${formattedTitle}* ]_\n\n_Nama : ${pushname ? pushname : 'Tidak Diketahui'}_\n_Owner Status : ${isOwner ? 'Ya' : 'Tidak'}_\n_Admin Status : ${isAdmin ? 'Ya' : 'Tidak'}_`, id);
         break;
+
+        case 'profile':
+        case 'me':
+              if (quotedMsg) {
+                  const getQuoted = quotedMsgObj.sender.id
+                  const profilePic = await client.getProfilePicFromServer(getQuoted)
+                  const username = quotedMsgObj.sender.name
+                  const statuses = await client.getStatus(getQuoted)
+                  const benet = _ban.includes(getQuoted) ? 'Yes' : 'No'
+                  const adm = groupAdmins.includes(getQuoted) ? 'Yes' : 'No'
+                  const { status } = statuses
+                  if (profilePic === undefined) {
+                      var pfp = errorImg
+                  } else {
+                      pfp = profilePic
+                  }
+                  await client.sendFileFromUrl(from, pfp, `${username}.jpg`, ind.profile(username, status, benet, adm), id)
+              } else {
+                  const profilePic = await client.getProfilePicFromServer(sender.id)
+                  const username = pushname
+                  const statuses = await client.getStatus(sender.id)
+                  const benet = isBanned ? 'Yes' : 'No'
+                  const adm = isGroupAdmins ? 'Yes' : 'No'
+                  const { status } = statuses
+                  if (profilePic === undefined) {
+                      var pfps = errorImg
+                  } else {
+                      pfps = profilePic
+                  }
+                  await client.sendFileFromUrl(from, pfps, `${username}.jpg`, ind.profile(username, status, benet, adm), id)
+              }
+          break
 
       case 'rob':
         /**
@@ -826,39 +917,57 @@ jidni @62895330810346`;
       //Stiker commands
 
       case 'halo':
-        await client.sendFileFromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/haloo.mp3', "halo.aac", "Haloo", null, null, null, true);
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/haloo.png');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/halo2.jpeg');
+        await client.sendFileFromUrl(from, './mediapreload/haloo.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/StZTdND/haloo.png');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/PNCvDNJ/halo2.jpg');
         break;
 
       case 'asep':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/asep1.png');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/asep2.png');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/2yytWMt/asep1.png');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/Nt1qc67/asep2.png');
         break;
 
       case 'tabah':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/tabah1.jpeg');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/tabah2.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/Xy5YQ9H/tabah1.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/yS2zpFt/tabah2.jpg');
         break;
 
       case 'lutelat':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/lotelat.jpeg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/Y2mnHhm/lotelat.jpg');
+        await client.sendFileFromUrl(from, './mediapreload/telat.mp3', "telat.mp3", "telaat", null, null, null, true);
         break;
 
       case 'bayu':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/bayu1.jpeg');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/bayu2.jpeg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/pK5Qs4J/bayu1.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/kDfVq4h/bayu2.jpg');
         break;
 
       case 'payoy':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy.jpg');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy.jpg');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/payoy2.jpeg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/cxNvqz7/payoy.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/cxNvqz7/payoy.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/r6phywr/payoy2.jpg');
         break;
 
       case 'teja':
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja1.jpg');
-        await client.sendStickerfromUrl(from, 'https://tesuu.luii-index.workers.dev/2:/stiker/teja2.webp');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/M5gfvfQ/teja1.jpg');
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/VSn3d8k/teja2.png');
+        break;
+      
+      case 'indihome':
+        await client.sendFileFromUrl(from, './mediapreload/indihome.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        await client.sendStickerfromUrl(from, 'https://i.ibb.co/k8xwK8s/image.png');
+        break;
+
+      case 'palpale':
+        await client.sendFileFromUrl(from, './mediapreload/pale.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        break;
+
+      case 'yamete':
+        await client.sendFileFromUrl(from, './mediapreload/masukin.mp3', "halo.mp3", "Haloo", null, null, null, true);
+        break;
+      
+      case 'papepap':
+        await client.sendFileFromUrl(from, './mediapreload/pap', "halo.mp3", "Haloo", null, null, null, true);
         break;
 
       case 'resi':
@@ -1018,6 +1127,186 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                 .catch(() => client.sendText(from, 'Error reply, Kode bahasa salah.\n\n Silahkan cek kode bahasa disini\nhttps://github.com/vitalets/google-translate-api/blob/master/languages.js'))}
           //if (!quotedMsg) return client.reply(from, `Maaf, format pesan salah.\nSilahkan reply sebuah pesan dengan caption ${botPrefix}translate <kode_bahasa>\ncontoh ${botPrefix}translate id`, id)
           break
+      
+          case 'hadis': // irham01
+          case 'hadees':
+              if (arguments.length <= 1) return await client.reply(from, ind.hadis(), id)
+              await client.reply(from, ind.wait(), id)
+              console.log('argumen 1 : ' + arguments[0]+ ' argumen 2 : ' + arguments[1])
+              try {
+                  if (arguments[0] === 'darimi') {
+                      const hdar = await axios.get(`https://api.hadith.sutanlab.id/books/darimi/${arguments[1]}`)
+                      await client.sendText(from, `${hdar.data.data.contents.arab}\n${hdar.data.data.contents.id}\n\n*H.R. Darimi*`, id)
+                  } else if (arguments[0] === 'ahmad') {
+                      const hmad = await axios.get(`https://api.hadith.sutanlab.id/books/ahmad/${arguments[1]}`)
+                      await client.sendText(from, `${hmad.data.data.contents.arab}\n${hmad.data.data.contents.id}\n\n*H.R. Ahmad*`, id)
+                  } else if (arguments[0] === 'bukhari') {
+                      const hbukh = await axios.get(`https://api.hadith.sutanlab.id/books/bukhari/${arguments[1]}`)
+                      await client.sendText(from, `${hbukh.data.data.contents.arab}\n${hbukh.data.data.contents.id}\n\n*H.R. Bukhori*`, id)
+                  } else if (arguments[0] === 'muslim') {
+                      const hmus = await axios.get(`https://api.hadith.sutanlab.id/books/muslim/${arguments[1]}`)
+                      await client.sendText(from, `${hmus.data.data.contents.arab}\n${hmus.data.data.contents.id}\n\n*H.R. Muslim*`, id)
+                  } else if (arguments[0] === 'malik') {
+                      const hmal = await axios.get(`https://api.hadith.sutanlab.id/books/malik/${arguments[1]}`)
+                      await client.sendText(from, `${hmal.data.data.contents.arab}\n${hmal.data.data.contents.id}\n\n*H.R. Malik*`, id)
+                  } else if (arguments[0] === 'nasai') {
+                      const hnas = await axios.get(`https://api.hadith.sutanlab.id/books/nasai/${arguments[1]}`)
+                      await client.sendText(from, `${hnas.data.data.contents.arab}\n${hnas.data.data.contents.id}\n\n*H.R. Nasa'i*`, id)
+                  } else if (arguments[0] === 'tirmidzi') {
+                      const htir = await axios.get(`https://api.hadith.sutanlab.id/books/tirmidzi/${arguments[1]}`)
+                      await client.sendText(from, `${htir.data.data.contents.arab}\n${htir.data.data.contents.id}\n\n*H.R. Tirmidzi*`, id)
+                  } else if (arguments[0] === 'ibnumajah') {
+                      const hibn = await axios.get(`https://api.hadith.sutanlab.id/books/ibnu-majah/${arguments[1]}`)
+                      await client.sendText(from, `${hibn.data.data.contents.arab}\n${hibn.data.data.contents.id}\n\n*H.R. Ibnu Majah*`, id)
+                  } else if (arguments[0] === 'abudaud') {
+                      const habud = await axios.get(`https://api.hadith.sutanlab.id/books/abu-daud/${arguments[1]}`)
+                      await client.sendText(from, `${habud.data.data.contents.arab}\n${habud.data.data.contents.id}\n\n*H.R. Abu Daud*`, id)
+                  } else {
+                      await client.sendText(from, ind.hadis(), id)
+                  }
+              } catch (err) {
+                  console.error(err)
+                  await client.reply(from, 'Error!', id)
+              }
+          break
+
+        case 'nulishd':                
+          if (arguments.length == 0) return client.reply(from, `Membuat bot menulis teks yang dikirim menjadi gambar\nPemakaian: ${prefix}nulishd [teks]\n\ncontoh: ${prefix}nulis i love you 3000`, id)
+          const nulisp = await _function.rugaapi.tulis(q)
+          await client.sendImage(from, `${nulisp}`, '', 'Nih ...', id)
+          .catch(() => {
+              client.reply(from, 'Ada yang Error!', id)
+          })
+          break
+
+
+          case 'nuliskanan': {
+            if (!arguments.length >= 1) return client.reply(from, `Kirim ${botPrefix}nuliskanan teks`, id) 
+            const tulisan = validMessage.slice(12)
+            client.sendText(from, 'sabar ya lagi nulis')
+            const splitText = tulisan.replace(/(\S+\s*){1,9}/g, '$&\n')
+            const fixHeight = splitText.split('\n').slice(0, 31).join('\n')
+            spawn('convert', [
+                './mediapreload/images/buku/sebelumkanan.jpg',
+                '-font',
+                './lib/font/Indie-Flower.ttf',
+                '-size',
+                '960x1280',
+                '-pointsize',
+                '23',
+                '-interline-spacing',
+                '2',
+                '-annotate',
+                '+128+129',
+                fixHeight,
+                './media/images/buku/setelahkanan.jpg'
+            ])
+            .on('error', () => client.reply(from, 'Error gan', id))
+            .on('exit', () => {
+                client.sendImage(from, './media/images/buku/setelahkanan.jpg', 'after.jpg', `*Nulis selesai!*\n\nDitulis selama: ${_function.processTime(t, moment())} _detik_`, id)
+              })
+            }
+            break
+
+        case 'nuliskiri':                     
+          if (!arguments.length >= 1) return client.reply(from, `Kirim ${botPrefix}nuliskiri teks`, id) 
+          const tulisan = validMessage.slice(11)
+          client.sendText(from, 'sabar ya lagi nulis')
+          const splitText = tulisan.replace(/(\S+\s*){1,9}/g, '$&\n')
+          const fixHeight = splitText.split('\n').slice(0, 31).join('\n')
+          spawn('convert', [
+              './mediapreload/images/buku/sebelumkiri.jpg',
+              '-font',
+              './lib/font/Indie-Flower.ttf',
+              '-size',
+              '960x1280',
+              '-pointsize',
+              '22',
+              '-interline-spacing',
+              '2',
+              '-annotate',
+              '+140+153',
+              fixHeight,
+              './media/images/buku/setelahkiri.jpg'
+          ])
+          .on('error', () => client.reply(from, 'Error gan', id))
+          .on('exit', () => {
+              client.sendImage(from, './media/images/buku/setelahkiri.jpg', 'after.jpg', `*Nulis selesai!*\n\nDitulis selama: ${_function.processTime(t, moment())} _detik_`, id)
+          })
+          break
+
+        case 'foliokiri': {
+            if (!arguments.length >= 1) return client.reply(from, `Kirim ${botPrefix}foliokiri teks`, id) 
+            const tulisan = validMessage.slice(11)
+            client.sendText(from, 'sabar ya lagi nulis')
+            const splitText = tulisan.replace(/(\S+\s*){1,13}/g, '$&\n')
+            const fixHeight = splitText.split('\n').slice(0, 38).join('\n')
+            spawn('convert', [
+                './mediapreload/images/folio/sebelumkiri.jpg',
+                '-font',
+                './lib/font/Indie-Flower.ttf',
+                '-size',
+                '1720x1280',
+                '-pointsize',
+                '23',
+                '-interline-spacing',
+                '4',
+                '-annotate',
+                '+48+185',
+                fixHeight,
+                './media/images/folio/setelahkiri.jpg'
+            ])
+            .on('error', () => client.reply(from, 'Error gan', id))
+            .on('exit', () => {
+                client.sendImage(from, './media/images/folio/setelahkiri.jpg', 'after.jpg', `*Nulis selesai!*\n\nDitulis selama: ${_function.processTime(t, moment())} _detik_`, id)
+            })
+            }
+            break
+
+          case 'foliokanan': {
+            if (!arguments.length >= 1) return client.reply(from, `Kirim ${botPrefix}foliokanan teks`, id) 
+            const tulisan = validMessage.slice(12)
+            client.sendText(from, 'sabar ya lagi nulis')
+            const splitText = tulisan.replace(/(\S+\s*){1,13}/g, '$&\n')
+            const fixHeight = splitText.split('\n').slice(0, 38).join('\n')
+            spawn('convert', [
+                './mediapreload/images/folio/sebelumkanan.jpg',
+                '-font',
+                './lib/font/Indie-Flower.ttf',
+                '-size',
+                '960x1280',
+                '-pointsize',
+                '23',
+                '-interline-spacing',
+                '3',
+                '-annotate',
+                '+89+190',
+                fixHeight,
+                './media/images/folio/setelahkanan.jpg'
+            ])
+            .on('error', () => client.reply(from, 'Error gan', id))
+            .on('exit', () => {
+                client.sendImage(from, './media/images/folio/setelahkanan.jpg', 'after.jpg', `*Nulis selesai!*\n\nDitulis selama: ${_function.processTime(t, moment())} _detik_`, id)
+            })
+            }
+            break
+
+          case 'pollresult':
+              _function.polling.getpoll(client, message, pollfile, voterslistfile)
+              break
+          
+          case 'addvote':
+              console.log('---> vote start')
+              _function.polling.voteadapter(client, message, pollfile, voterslistfile)
+              break
+          
+          case 'addpoll':
+              _function.polling.adminpollreset(client, message, message.body.slice(9), pollfile, voterslistfile)
+              break
+          
+          case 'addv':
+              _function.polling.addcandidate(client, message, message.body.slice(6), pollfile, voterslistfile)
+              break
 
       //Weeb Zone
       case 'neko':
@@ -1058,19 +1347,6 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
           })
         break
       
-      case 'komiku':
-        _function.weeaboo.manga(q)
-          .then(async ({ genre, info, link_dl, sinopsis, thumb }) => {
-            let mangak = `${info}${genre}\nSinopsis: ${sinopsis}\nLink download:\n${link_dl}`
-            await client.sendFileFromUrl(from, thumb, 'mangak.jpg', mangak, null, null, true)
-              .then(() => console.log('Success sending manga info!'))
-          })
-          .catch(async (err) => {
-            console.error(err)
-            await client.reply(from, 'Error!', id)
-          })
-        break
-      
       case 'wait':
         if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar screenshot yang ingin dicari sumber anime nya lalu berikan caption ${botPrefix}wait_`, id);
         if (isMedia && isImage || isQuotedImage){
@@ -1078,7 +1354,8 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
           const encryptMedia = isQuotedImage ? quotedMsg : message
           const _mimetype = isQuotedImage ? quotedMsg.mimetype : mimetype
           const mediaData = await decryptMedia(encryptMedia, uaOverride)
-          const imageBase64 = `data:${_mimetype};base64,${mediaData.toString('base64')}`
+          const mediatostr = mediaData.toString('base64')
+          const imageBase64 = `data:${_mimetype};base64,${mediatostr}`
           _function.weeaboo.wait(imageBase64)
             .then(async (result) => {
               if (result.docs && result.docs.length <= 2) {
@@ -1091,11 +1368,22 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                   client.reply('Low similiarity. \n\nMungkin anda bisa mencoba crop terlebih dahulu atau dengan gambar lain')
                 } else {
                   teks += `*Title*: ${title}\n*Romaji*: ${title_romaji}\n*English*: ${title_english}\n*Episode*: ${episode}\n*Similarity*: ${(similarity * 100).toFixed(1)}%`
-                  const video = `https://media.trace.moe/video/${anilist_id}/${encodeURIComponent(filename)}?t=${at}&token=${tokenthumb}`
+                  var video = `https://media.trace.moe/video/${anilist_id}/${encodeURIComponent(filename)}?t=${at}&token=${tokenthumb}`
                   console.log(video)
                   try {
-                    await client.sendFileFromUrl(from, video, `waitresult.mp4`, teks, id)
-                    .then(() => console.log('Success sending anime source!'))
+                    const dir = path.resolve(__dirname, '../media', 'waittmp.mp4');
+                    const writer = fs.createWriteStream(dir)
+                    const response = await axios({
+                      url: video,
+                      method: 'GET',
+                      responseType: 'stream'
+                    })
+                    response.data.pipe(writer)
+                    console.log(`---> dir path : ${dir}`)
+                    await client.sendFile(from, dir, `waitresult.mp4`, teks, id)
+                    await client.reply(from, teks, id)
+                      .then(() => console.log('Success sending anime source!'))
+                    
                   } catch (error) {
                     await client.reply(from, teks, id)
                     console.log('Video send error, trying without video')
@@ -1112,6 +1400,7 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
         break
 
       case 'sauce':
+        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar artwork yang ingin dicari sumber link nya lalu berikan caption ${botPrefix}sauce_`, id);
         if (isMedia && isImage || isQuotedImage) {
           await client.reply(from, ind.wait(), id)
           const encryptMedia = isQuotedImage ? quotedMsg : message
@@ -1119,10 +1408,12 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
           try {
               const imageLink = await uploadImages(mediaData, `sauce.${sender.id}`)
               console.log('Searching for source...')
+              console.log('---> Image link : ' + imageLink)
               const results = await saus(imageLink)
+              let teks = ''
               for (let i = 0; i < results.length; i++) {
-                  let teks = ''
                   if (results[i].similarity < 80.00) {
+                      console.log('Low similiarity results')
                       teks = 'Low similarity. 🤔\n\n'
                   } else {
                       teks += `*Link*: ${results[i].url}\n*Site*: ${results[i].site}\n*Author name*: ${results[i].authorName}\n*Author link*: ${results[i].authorUrl}\n*Similarity*: ${results[i].similarity}%`
@@ -1152,54 +1443,6 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
               await client.reply(from, 'Error!', id)
             })
         break
-      
-      case 'anitoki':
-        await client.reply(from, ind.wait(), id)
-        _function.weeaboo.anitoki()
-          .then(async ({ result }) => {
-              let anitoki = '-----[ *ANITOKI LATEST* ]-----'
-              for (let i = 0; i < result.length; i++) {
-                anitoki += `\n\n➸ *Title*: ${result[i].title}\n➸ *URL*: ${result[i].link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
-              }
-                await client.reply(from, anitoki, id)
-          })
-          .catch(async (err) => {
-            console.error(err)
-            await client.reply(from, 'Error!', id)
-          })
-        break
-
-      case 'neonime':
-        await client.reply(from, ind.wait(), id)
-        _function.weeaboo.neonime()
-          .then(async ({ status, result }) => {
-              if (status !== 200) return await client.reply(from, 'Not found.', id)
-              let neoInfo = '-----[ *NEONIME LATEST* ]-----'
-              for (let i = 0; i < result.length; i++) {
-                const { date, title, link, desc } = result[i]
-                neoInfo += `\n\n➸ *Title*: ${title}\n➸ *Date*: ${date}\n➸ *Synopsis*: ${desc}\n➸ *Link*: ${link}\n\n=_=_=_=_=_=_=_=_=_=_=_=_=`
-              }
-                await client.reply(from, neoInfo, id)
-                console.log('Success sending Neonime latest update!')
-          })
-          .catch(async (err) => {
-            console.error(err)
-            await client.reply(from, 'Error!', id)
-          })
-        break
-      
-        case 'animesticker':
-        _function.weeaboo.snime()
-            .then(async (body) => {
-                const wifegerak = body.split('\n')
-                const wifegerakx = wifegerak[Math.floor(Math.random() * wifegerak.length)]
-                await client.sendStickerfromUrl(from, wifegerakx)
-            })
-            .catch(async (err) => {
-                console.error(err)
-                await client.reply(from, 'Error!', id)
-            })
-    break
 
       default:
         client.reply(from, `Salah command, mohon cek ${botPrefix}menu untuk daftar command`, id)

@@ -21,7 +21,7 @@ const configObject = {
 
 
 const ops = process.platform;
-if (ops === "win32" || ops === "win64") configObject["executeablePath"] = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe";
+if (ops === "win32" || ops === "win64") configObject["executeablePath"] = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 else if (ops === "linux") configObject["executeablePath"] = "/usr/bin/google-chrome-stable";
 else if (ops === "darwin") configObject["executeablePath"] = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
