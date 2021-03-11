@@ -967,7 +967,7 @@ jidni @62895330810346`;
         break;
       
       case 'papepap':
-        await client.sendFile(from, './mediapreload/pap', "halo.mp3", "Haloo", null, null, true);
+        await client.sendFile(from, './mediapreload/pap.mp3', "halo.mp3", "Haloo", null, null, true);
         break;
 
       case 'resi':
