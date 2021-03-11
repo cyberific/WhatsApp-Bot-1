@@ -516,7 +516,6 @@ module.exports = async (client, message) => {
 
         case 'jadwalsholat':
           case 'jadwalsolat':
-              if (!isRegistered) return await client.reply(from, ind.notRegistered(), id)
               if (!q) return await client.reply(from, ind.wrongFormat(), id)
               await client.reply(from, ind.wait(), id)
               _function.misc.jadwalSholat(q)
