@@ -58,9 +58,10 @@ function ngelisttugas(){
 }
 
 module.exports = async (client, message) => {
+  const { id, body, mimetype, type, t, from, sender, content, caption, author, isGroupMsg, isMedia, chat, quotedMsg, quotedMsgObj, mentionedJidList } = message;
   try {
     const msgAmount = await client.getAmountOfLoadedMessages();
-    if (msgAmount > 3000) await client.cutMsgCache();
+    if (msgAmount > 1000) await client.cutMsgCache();
 
     const { id, body, mimetype, type, t, from, sender, content, caption, author, isGroupMsg, isMedia, chat, quotedMsg, quotedMsgObj, mentionedJidList } = message;
     const { name, shortName, pushname, formattedName } = sender;
