@@ -12,6 +12,7 @@ const toMs = require('ms')
 const { spawn } = require('child_process')
 var http = require('http');
 const path = require('path')
+const tanggal = moment.tz('Asia/Jakarta').format('DD-MM-YYYY')
 const uaOverride = config.uaOverride
 const saus = sagiri(config.nao, { results: 5 });
 
@@ -1366,22 +1367,13 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                 let teks = ''
                 teks += `*Anime Result*\n\n`
                 if (similarity < 0.9) {
-                  client.reply('Low similiarity. \n\nMungkin anda bisa mencoba crop terlebih dahulu atau dengan gambar lain')
+                  client.reply('Low similiarity. \n\nMungkin anda bisa mencoba crop terlebih dahulu atau coba lagi dengan gambar lain')
                 } else {
                   teks += `*Title*: ${title}\n*Romaji*: ${title_romaji}\n*English*: ${title_english}\n*Episode*: ${episode}\n*Similarity*: ${(similarity * 100).toFixed(1)}%`
                   var video = `https://media.trace.moe/video/${anilist_id}/${encodeURIComponent(filename)}?t=${at}&token=${tokenthumb}`
                   console.log(video)
                   try {
-                    const dir = path.resolve(__dirname, '../media', 'waittmp.mp4');
-                    const writer = fs.createWriteStream(dir)
-                    const response = await axios({
-                      url: video,
-                      method: 'GET',
-                      responseType: 'stream'
-                    })
-                    response.data.pipe(writer)
-                    console.log(`---> dir path : ${dir}`)
-                    await client.sendFile(from, dir, `result.mp4`, null, id)
+                    await client.sendFileFromUrl(from, video, `result.mp4`, null, id)
                     await client.reply(from, teks, id)
                       .then(() => console.log('Success sending anime source!'))
                     
