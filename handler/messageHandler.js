@@ -12,9 +12,9 @@ const toMs = require('ms')
 const { spawn } = require('child_process')
 var http = require('http');
 const path = require('path')
-const moment = require('moment-timezone')
-moment.tz.setDefault('Asia/Jakarta').locale('id')
-const tanggal = moment.tz('Asia/Jakarta').format('DD-MM-YYYY')
+const momentt = require('moment-timezone')
+momentt.tz.setDefault('Asia/Jakarta').locale('id')
+const tanggal = momentt.tz('Asia/Jakarta').format('DD-MM-YYYY')
 const uaOverride = config.uaOverride
 const saus = sagiri(config.nao, { results: 5 });
 
