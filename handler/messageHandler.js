@@ -133,7 +133,8 @@ module.exports = async (client, message) => {
       'ga jadi pacar zeus',
       'jadi jelek',
       'noob vr',
-      'jadi botfrag terus'
+      'jadi botfrag terus',
+      'di haloin bu anif ampe meninggoy'
       ]
 
     // debug
@@ -1059,7 +1060,6 @@ jidni @62895330810346`;
 
       case 'alkitab':
         if (arguments.length === 0) return client.reply(from, `Mengirim detail ayat al-kitab dari pencarian \n\nContoh : ${botPrefix}alkitab <pencarian>`, id);
-        if (!q) return await client.reply(from, ind.wrongFormat(), id)
         await client.reply(from, ind.wait(), id)
         _function.misc.alkitab(q)
             .then(async ({ result }) => {
@@ -1070,6 +1070,28 @@ jidni @62895330810346`;
                 await client.reply(from, alkitab, id)
                 console.log('Success sending Al-Kitab!')
             })
+        break
+
+      case 'kbbi':
+        if (arguments.length === 0) return client.reply(from, `Mengirim detail arti kbbi dari pencarian \n\nContoh : ${botPrefix}kbbi <pencarian>`, id);
+        await client.reply(from, ind.wait(), id)
+          _function.misc.kbbi(q)
+          .then(async ({ lema, arti })=> {
+            try {
+              let kbbi = '------*KBBI*------'
+              kbbi += `\n\n*Kata*: ${lema}\n\n`
+              kbbi += `*Arti*: \n`
+              for (let i = 0; i < arti.length; i++){
+                kbbi += `➸ ${arti[i]}\n`
+              }
+              await client.reply(from, kbbi, id)
+              console.log('Success sending KBBI details!')
+            } catch (err){
+              await client.reply(from, `Sepertinya kata tersebut tidak ditemukan, mohon coba kata lain`)
+              console.log('Failed sending KBBI details!')
+              console.log(err.stack)
+            }
+          })
         break
 
       case 'reminder': // by Slavyan

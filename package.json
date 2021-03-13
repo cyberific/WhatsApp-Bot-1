@@ -29,10 +29,10 @@
     "nekos.life": "^2.0.7",
     "parse-ms": "^2.1.0",
     "sagiri": "^3.1.1",
-    "scrape-yt": "^1.4.7",
     "solenolyrics": "^5.0.0",
     "wikipedia": "^1.0.1",
     "youtube-mp3-downloader": "^0.7.6",
+    "youtubei": "^0.0.1-rc.14",
     "ytdl-core": "^4.5.0"
   }
 }
