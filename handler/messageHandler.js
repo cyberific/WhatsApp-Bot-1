@@ -893,10 +893,11 @@ jidni @62895330810346`;
         break;
         
       case 'addtugas':
+	if (!q.includes('|')) return await client.reply(from, ind.wrongFormat(), id);
         if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}addtugas | <detail tugas>_`, id);
         const isitugas = arg.split('|')[1];
         const tugasin = tugas.push(isitugas);
-        fs.writeFileSync('./jsonfolder/tugas.json', JSON.stringify(tugas));
+        fs.writeFileSync('./database/tugas.json', JSON.stringify(tugas));
         if (tugasin) return await client.reply(from, '📚 Tugas sudah ditambahkan!', id)
         break;
       
@@ -914,7 +915,7 @@ jidni @62895330810346`;
         var i = arguments[0];
         i--;
         const hapusintugaslist = tugas.splice(i, 1);
-        fs.writeFileSync('./jsonfolder/tugas.json', JSON.stringify(tugas));
+        fs.writeFileSync('./database/tugas.json', JSON.stringify(tugas));
         //const hapusin = delete tugas[i];
         if (hapusintugaslist) return await client.reply(from, "Tugas dengan nomor " + arguments + " sudah dihapus", id);
         break;
@@ -1468,7 +1469,7 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
 
     return;
   } catch (err) {
-    client.sendText(from, 'Syid, server crash!\n\nTolong hubungi owner agar dinyalakan kembali')
+    client.sendText(from, 'Syid, Client error!\n\nTolong hubungi owner beserta error log')
     client.sendText(from, `error log\n\n ${err}`)
     console.log(err);
   }
