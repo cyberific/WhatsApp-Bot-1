@@ -638,7 +638,7 @@ module.exports = async (client, message) => {
                   })
                   .catch(async (err) => {
                       console.error(err)
-                      await client.reply(from, 'Error!', id)
+                      await client.reply(from, 'Kota tidak ditemukan!', id)
                   })
           break
 
@@ -759,20 +759,26 @@ module.exports = async (client, message) => {
         */
         break;
 
-      case 'downtiktok':
-        return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan!_', id);
-        break;
+      case 'musicyt':
+        await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
+        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !musicyt <url>_', id);
+        const musicmp3 = await _function.youtubeMusicURL(arguments[0]);
+        try {
+          //ytwait = true;
+          const mp3url = musicmp3.file;
+          const judul = musicmp3.title;
+          const durasi = musicmp3.duration;
 
-      case 'downtwitter':
-        return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan_', id);
-        break;
+          const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${durasi} detik`
 
-      case 'downfacebook':
-        return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan_', id);
-        break;
-
-      case 'downinstagram':
-        return await client.reply(from, '_🛑 Fitur sedang dalam pengerjaan_', id);
+          await client.reply(from, caption, id)
+          await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
+          //ytwait = false;
+        } catch (error) {
+          await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
+          //console.log("music download error " + musicLink);
+          console.log(error.stack);
+        }
         break;
 
       case 'lyrics':
@@ -786,7 +792,7 @@ module.exports = async (client, message) => {
       case 'short':
         if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}short <url/link yang ingin di perkecil>_`, id);
         const getShortener = await _function.short(arguments[0]);
-        await client.reply(from, `_${getShortener}_`, id);
+        await client.reply(from, `${getShortener}`, id);
         break;
 
       case 'corona':
@@ -1051,6 +1057,30 @@ Wahyu @6281413543830`
 
       case 'prank':
         await client.sendFile(from, './mediapreload/prank.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+
+      case 'goblok':
+        await client.sendFile(from, './mediapreload/goblok.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+
+      case 'anjing':
+        await client.sendFile(from, './mediapreload/anjing.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+
+      case 'cangkul':
+        await client.sendFile(from, './mediapreload/cangkul.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+      
+      case 'otak':
+        await client.sendFile(from, './mediapreload/otak.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+
+      case 'bangsat':
+        await client.sendFile(from, './mediapreload/bangsat.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+      
+      case 'sange':
+        await client.sendFile(from, './mediapreload/sange.mp3', "halo.mp3", "Haloo", null, null, true);
         break;
 
       case 'resi':
