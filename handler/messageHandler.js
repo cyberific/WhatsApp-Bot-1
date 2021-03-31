@@ -727,7 +727,7 @@ module.exports = async (client, message) => {
         await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
         //if (ytwait == true) return await client.reply(from, '_⚠️ Mohon menunggu command music sebelumnya selesai diupload terlebih dahulu_', id);
-        const musicLink = await _function.youtubeMusic(arguments.join(' '));
+        const musicLink = await _function.youtube.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
         try {
           //ytwait = true;
@@ -745,24 +745,12 @@ module.exports = async (client, message) => {
           //console.log("music download error " + musicLink);
           console.log(error.stack);
         }
-        /*
-        try {
-          await client.sendFile(from, musicLink, "halo.aac", "Haloo", id, null, true);
-          //await client.sendPtt(from, musicLink, id);
-          console.log("music download success " + musicLink);
-        } catch (err) {
-          await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
-          console.log("music download error " + musicLink);
-          console.log(err.stack);
-        }
-        //await client.sendPtt(from, musicLink, id);
-        */
         break;
 
       case 'musicyt':
         await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !musicyt <url>_', id);
-        const musicmp3 = await _function.youtubeMusicURL(arguments[0]);
+        const musicmp3 = await _function.youtube.youtubeMusicURL(arguments[0]);
         try {
           //ytwait = true;
           const mp3url = musicmp3.file;
