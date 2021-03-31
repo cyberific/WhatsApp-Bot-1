@@ -1592,9 +1592,12 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
 
       case 'waifu':
         await client.reply(from, ind.wait(), id)
-        if (arguments === 'nsfw'){ var i = true } else { var i = false }
+        if (arguments[0] === 'nsfw'){ var i = true } else { var i = false }
         _function.weeaboo.waifu(i)
           .then(async ({ url }) => {
+            if (i == true) {
+              await client.reply(from, `_⚠️Disclaimer⚠️_\n\nPastikan yang melihat ini berumur 18+++++++\nBot Owner tidak bertanggung jawab jika command ini disalahgunakan\n\nTerima kasih`, id)
+            }
             await client.sendFileFromUrl(from, url, 'waifu.png', '', id)
               .then(() => console.log('Success sending waifu!'))
           })
