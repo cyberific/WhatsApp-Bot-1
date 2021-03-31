@@ -16,7 +16,11 @@ const { media } = require('wikipedia/dist/page')
 const fetchJson = (url, options) =>
     new Promise((resolve, reject) =>
         fetch(url, options)
-            .then(response => response.json())
+            .then(response => {
+              if (!response.ok) {
+                 throw new Error();
+              }
+               response.json()})
             .then(json => resolve(json))
             .catch(err => {
                 console.error(err)

@@ -1104,6 +1104,7 @@ jidni @62895330810346`;
           }
           if (daftarlist.length === 0 && judullist.length === 0) return client.reply(from, `List sudah di reset !`, id);
           break;
+/*
 
       case 'alkitab':
         if (arguments.length === 0) return client.reply(from, `Mengirim detail ayat al-kitab dari pencarian \n\nContoh : ${botPrefix}alkitab <pencarian>`, id);
@@ -1118,13 +1119,13 @@ jidni @62895330810346`;
                 console.log('Success sending Al-Kitab!')
             })
         break
-
+*/
       case 'kbbi':
         if (arguments.length === 0) return client.reply(from, `Mengirim detail arti kbbi dari pencarian \n\nContoh : ${botPrefix}kbbi <pencarian>`, id);
         await client.reply(from, ind.wait(), id)
+	try{
           _function.misc.kbbi(q)
           .then(async ({ lema, arti })=> {
-            try {
               let kbbi = '------*KBBI*------'
               kbbi += `\n\n*Kata*: ${lema}\n\n`
               kbbi += `*Arti*: \n`
@@ -1133,12 +1134,12 @@ jidni @62895330810346`;
               }
               await client.reply(from, kbbi, id)
               console.log('Success sending KBBI details!')
+	    })
             } catch (err){
               await client.reply(from, `Sepertinya kata tersebut tidak ditemukan, mohon coba kata lain`)
               console.log('Failed sending KBBI details!')
               console.log(err.stack)
             }
-          })
         break
 
       case 'reminder': // by Slavyan
@@ -1417,7 +1418,7 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                 });
                 */
                 const caption = `Judul: ${title} \n\nKualitas Video: \n${statquality} \n\nProcessed for ${_function.processTime(t, moment())} _Second_`
-                await client.sendFileFromUrl(from, linkdown, 'videos.mp4', caption, null, null, true)
+                await client.sendFileFromUrl(from, linkdown, 'videos.mp4', caption)
                     .then((serialized) => console.log(`Sukses Mengirim File dengan id: ${serialized} diproses selama ${_function.processTime(t, moment())}`))
                     .catch((err) => console.error(err))
             })
