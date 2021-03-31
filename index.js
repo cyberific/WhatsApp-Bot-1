@@ -1,5 +1,9 @@
 const { create, decryptMedia } = require("@open-wa/wa-automate");
 
+const win = {executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"}
+const linux = {executablePath: "/usr/bin/google-chrome-stable"}
+const mac = {executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}
+
 const configObject = {
   sessionId: "SAD_CLIENT",
   authTimeout: 0,
@@ -21,9 +25,9 @@ const configObject = {
 
 
 const ops = process.platform;
-if (ops === "win32" || ops === "win64") configObject["executeablePath"] = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-else if (ops === "linux") configObject["executeablePath"] = "/usr/bin/google-chrome-stable";
-else if (ops === "darwin") configObject["executeablePath"] = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+if (ops === "win32" || ops === "win64") {const assignObj = Object.assign(configObject, win)}
+else if (ops === "linux") {const assignObj = Object.assign(configObject, linux)}
+else if (ops === "darwin") {const assignObj = Object.assign(configObject, mac)};
 
 const startBot = async () => {
   try {

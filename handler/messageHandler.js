@@ -31,6 +31,12 @@ const _ban = JSON.parse(fs.readFileSync('./database/banned.json'))
 const judullist = [];
 const daftarlist = [];
 
+var ytwait = false;
+
+const isUrl = (url) => {
+  return url.match(new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/gi))
+}
+
 function arrayRemove(arr, value) { 
     
   return arr.filter(function(ele){ 
@@ -117,6 +123,8 @@ module.exports = async (client, message) => {
     const arg = validMessage.substring(validMessage.indexOf(' ') + 1)
     const q = arguments.join(' ')
     const urlRegex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+
+    const url = arguments.length !== 0 ? arguments[0] : ''
 
     const santet = [
       'Muntah Paku',
@@ -272,6 +280,7 @@ module.exports = async (client, message) => {
         break
 
       case 'listblock':
+        if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id)
           let block = ind.listBlock(blockNumber)
           for (let i of blockNumber) {
               block += `@${i.replace('@c.us', '')}\n`
@@ -329,7 +338,7 @@ module.exports = async (client, message) => {
       case 'kick':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
         if (!isAdmin) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan oleh *Admin* grup saja!_', id);
-        if (mentionedJidList.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}kick @mention_`, id);
+        if (mentionedJidList.length !== 1) return await client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}kick @mention_`, id);
         if (!isBotAdmin) return await client.reply(from, '_⚠️ Perintah ini hanya dapat digunakan ketika *Bot berstatus Admin* di grup ini!_', id);
         const isKicked = await client.removeParticipant(from, mentionedJidList[0]);
         if (isKicked) return await client.reply(from, '_🎉 Berhasil Kick member Berikan Ucapan Selamat Tinggal!_', id);
@@ -715,10 +724,28 @@ module.exports = async (client, message) => {
 
       case 'musik':
       case 'music':
-        await client.reply(from, "Fitur masih berstatus *beta*, dimohon untuk tidak terlalu sering digunakan", id);
+        await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
+        //if (ytwait == true) return await client.reply(from, '_⚠️ Mohon menunggu command music sebelumnya selesai diupload terlebih dahulu_', id);
         const musicLink = await _function.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
+        try {
+          //ytwait = true;
+          const mp3url = musicLink.file;
+          const judul = musicLink.title;
+          const durasi = musicLink.duration;
+
+          const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${durasi} detik`
+
+          await client.reply(from, caption, id)
+          await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
+          //ytwait = false;
+        } catch (error) {
+          await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
+          //console.log("music download error " + musicLink);
+          console.log(error.stack);
+        }
+        /*
         try {
           await client.sendFile(from, musicLink, "halo.aac", "Haloo", id, null, true);
           //await client.sendPtt(from, musicLink, id);
@@ -729,6 +756,7 @@ module.exports = async (client, message) => {
           console.log(err.stack);
         }
         //await client.sendPtt(from, musicLink, id);
+        */
         break;
 
       case 'downtiktok':
@@ -878,6 +906,21 @@ module.exports = async (client, message) => {
         await client.sendTextWithMentions(from, vr);
         break;
 
+      case 'logingta':
+        const gta =`
+Login gta dong
+Aji @628888418207 
+Junas @628978113198 
+Gisah @6288225610884 
+Dito @6285155277438 
+Arip @6282299922988 
+Hadid @6281329989383 
+Willy @6282112378872 
+Wahuy @6281413543830
+Nopal @6289638065793`;
+        await client.sendTextWithMentions(from, gta);
+        break;
+
       case 'loginml':
         const ml = `Login ml dong
 aji @628888418207
@@ -888,7 +931,6 @@ ikhsan @6281510026269
 sese @6281511529199
 dito @6285155277438
 jidni @62895330810346`;
-
         await client.sendTextWithMentions(from, ml);
         break;
         
@@ -974,6 +1016,10 @@ jidni @62895330810346`;
       
       case 'papepap':
         await client.sendFile(from, './mediapreload/pap.mp3', "halo.mp3", "Haloo", null, null, true);
+        break;
+
+      case 'prank':
+        await client.sendFile(from, './mediapreload/prank.mp3', "halo.mp3", "Haloo", null, null, true);
         break;
 
       case 'resi':
@@ -1334,6 +1380,52 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
           case 'addv':
               _function.polling.addcandidate(client, message, message.body.slice(6), pollfile, voterslistfile)
               break
+
+
+      case 'fb':
+        case 'facebook':
+            if (arguments.length !== 1) return client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}fb <link fb>_`, id)
+            if (!isUrl(url) && !url.includes('facebook.com')) return client.reply(from, 'Maaf, url yang kamu kirim tidak valid. [Invalid Link]', id)
+            await client.reply(from, ind.wait(), id)
+            _function.facebook(url).then(async (videoMeta) => {
+                const downloadhd = videoMeta.download.hd
+                const title = videoMeta.title
+                var statquality = "quality"
+                var linkdown
+
+                if (downloadhd == null) {
+                  linkdown = videoMeta.download.sd
+                  statquality = "SD"
+                } else {
+                  linkdown = videoMeta.download.hd
+                  statquality = "HD"
+                }
+                /*
+                console.log(linkdown);
+                const filepath = "./media"
+
+                const dl = new DownloaderHelper(linkdown, filepath);
+
+                dl.on('end', downloadInfo => {
+                  console.log('Download Completed: ', downloadInfo)
+                  const dir = path.resolve(__dirname, `../media/${downloadInfo.fileName}`);
+                  console.log(dir)
+                })
+                dl.start().catch(err => { 
+                  console.log(err) 
+                  client.reply(from, `Error, url tidak valid atau tidak memuat video. [Invalid Link or No Video] \n\n${err}`, id);
+                });
+                */
+                const caption = `Judul: ${title} \n\nKualitas Video: \n${statquality} \n\nProcessed for ${_function.processTime(t, moment())} _Second_`
+                await client.sendFileFromUrl(from, linkdown, 'videos.mp4', caption, null, null, true)
+                    .then((serialized) => console.log(`Sukses Mengirim File dengan id: ${serialized} diproses selama ${_function.processTime(t, moment())}`))
+                    .catch((err) => console.error(err))
+            })
+                .catch(async (err) => {
+                  client.reply(from, `Error, url tidak valid atau tidak memuat video. [Invalid Link or No Video] \n\n${err}`, id);
+                  console.log(err);
+                })
+          break
 
       //Weeb Zone
       case 'neko':
