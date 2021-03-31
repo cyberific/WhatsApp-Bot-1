@@ -907,8 +907,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'logingta':
-        const gta =`
-Login gta dong
+        const gta =`Login gta dong
 Aji @628888418207 
 Junas @628978113198 
 Gisah @6288225610884 
@@ -932,6 +931,38 @@ sese @6281511529199
 dito @6285155277438
 jidni @62895330810346`;
         await client.sendTextWithMentions(from, ml);
+        break;
+
+      case 'loginamong':
+        const among = `Login among us dong
+Murise @6281511529199
+Dito @6285155277438⁩ 
+Junas @628978113198
+Arip @6282299922988⁩ 
+Hadid @6281329989383⁩ 
+Willy @6282112378872⁩ 
+Wahuy @6281413543830
+Nopal @6289638065793⁩
+Ghyas @6281285600258
+Zidny @62895330810346
+Aji @628888418207
+Barra @6281388088047
+Titan @6287788087760
+Aufa @6285893440925`;
+        await client.sendTextWithMentions(from, among);
+        break;
+
+      case 'loginmc':
+        const mc =`Login minecraft dong
+Gisah @6288225610884
+Willy @6282112378872
+Murise @6281511529199
+Aufa @6285893440925
+Nopal @6289638065793⁩
+Junas @628978113198
+Barra @6281388088047
+Wahyu @6281413543830`
+        await client.sendTextWithMentions(from, mc);
         break;
         
       case 'addtugas':
