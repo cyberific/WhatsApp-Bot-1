@@ -37,6 +37,21 @@ exports.hadis = () => {
     `
 }
 
+exports.waifu = () => {
+    return `
+*Command Waifu
+${prefix}waifu <mode> <kategori>
+
+Pilih salah satu mode dan kategori di bawah ini
+
+_Daftar mode_ : sfw, nsfw
+
+_Daftar kategori sfw_ : waifu, neko, shinobu, megumin, bully, cuddle, cry, hug, awoo, kiss, lick, pat, smug, bonk, yeet, blush, smile, wave, highfive, handhold, nom, bite, glomp, kill, slap, happy, wink, poke, dance, cringe, blush
+
+_Daftar kategori nsfw_ : waifu, neko, trap, blowjob
+`
+}
+
 exports.wait = () => {
     return `Mohon tunggu sebentar~`
 }
