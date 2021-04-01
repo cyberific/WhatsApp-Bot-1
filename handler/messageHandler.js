@@ -279,13 +279,20 @@ module.exports = async (client, message) => {
           }
         break
 
+      case 'listban':
       case 'listblock':
         if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id)
           let block = ind.listBlock(blockNumber)
-          for (let i of blockNumber) {
+          if (blockNumber.length === 0) {
+            block += '\nYey gaada yang di blok'
+            await client.sendText(from, block)
+          } else {
+            for (let i of blockNumber) {
               block += `@${i.replace('@c.us', '')}\n`
+            } 
+            await client.sendTextWithMentions(from, block)
           }
-          await client.sendTextWithMentions(from, block)
+          
       break
 
       case 'freespace':
@@ -1438,12 +1445,11 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
             if (!isUrl(url) && !url.includes('facebook.com')) return client.reply(from, 'Maaf, url yang kamu kirim tidak valid. [Invalid Link]', id)
             await client.reply(from, ind.wait(), id)
             _function.facebook(url).then(async (videoMeta) => {
-                const downloadhd = videoMeta.download.hd
                 const title = videoMeta.title
                 var statquality = "quality"
                 var linkdown
 
-                if (downloadhd == null) {
+                if (videoMeta.download.hd === null) {
                   linkdown = videoMeta.download.sd
                   statquality = "SD"
                 } else {
