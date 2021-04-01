@@ -24,7 +24,8 @@ const errorImg = 'https://i.ibb.co/jRCpLfn/user.png'
 const _function = require('../lib/function');
 const _txt = require('../lib/text');
 const color = require('../util/colors');
-const { uploadImages } = require('../util/fetcher')
+const { uploadImages } = require('../util/fetcher');
+const { prefix } = require('../settings');
 const tugas = JSON.parse(fs.readFileSync('./database/tugas.json'));
 const _reminder = JSON.parse(fs.readFileSync('./database/reminder.json'))
 const _ban = JSON.parse(fs.readFileSync('./database/banned.json'))
@@ -678,11 +679,15 @@ module.exports = async (client, message) => {
 
       case 'sticker':
       case 'stiker':
-        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar yang ingin dijadikan stiker lalu berikan caption ${botPrefix}stiker_`, id);
-        if (!mimetype.includes('image')) return await client.reply(from, '_⚠️ Pastikan kamu benar mengirim image (gambar)_', id);
-        const imagemediadata = await decryptMedia(message);
-        const imageb64 = `data:${mimetype};base64,${imagemediadata.toString('base64')}`;
-        await client.sendImageAsSticker(from, imageb64);
+        if (!isImage && !isQuotedImage) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim atau reply sebuah gambar yang ingin dijadikan stiker lalu berikan caption ${botPrefix}stiker_`, id);
+        const encryptMedia = isQuotedImage ? quotedMsg : message
+        const _mimetype = isQuotedImage ? quotedMsg.mimetype : mimetype
+        const mediaData = await decryptMedia(encryptMedia, uaOverride)
+        const mediatostr = mediaData.toString('base64')
+        const imageBase64 = `data:${_mimetype};base64,${mediatostr}`
+        //const imagemediadata = await decryptMedia(message);
+        //const imageb64 = `data:${mimetype};base64,${imagemediadata.toString('base64')}`;
+        await client.sendImageAsSticker(from, imageBase64);
         break;
 
       case 'gifsticker':
@@ -822,6 +827,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'stickertottext':
+      case 'stickerteks':
       case 'stikerteks':
         if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}stikerteks <kalimat>_`, id);
         const teksLink = _function.tosticker(arguments);
@@ -1522,8 +1528,8 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
           })
         break
       
-      case 'wait':
-        if (!mimetype) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim sebuah gambar screenshot yang ingin dicari sumber anime nya lalu berikan caption ${botPrefix}wait_`, id);
+      case 'traceanime':
+        if (!isImage && !isQuotedImage) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : kirim atau reply sebuah gambar screenshot yang ingin dicari sumber anime nya lalu berikan caption ${botPrefix}wait_`, id);
         if (isMedia && isImage || isQuotedImage){
           await client.reply(from, ind.wait(), id)
           const encryptMedia = isQuotedImage ? quotedMsg : message
@@ -1597,10 +1603,16 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
         break
 
       case 'waifu':
-        await client.reply(from, ind.wait(), id)
+        const modes = ['sfw', 'nsfw']
+        const categories = ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'kill', 'slap', 'happy', 'wink', 'poke', 'dance', 'cringe', 'blush']
+        if (arguments.length !== 2) return await client.reply(from, ind.waifu(), id)
+        if (!modes.includes(arguments[0])) return client.sendText(from, `Maaf, mode pencarian yang anda pilih tidak ada, mohon cek ${prefix}waifu untuk bantuan`)
+        if (!categories.includes(arguments[1])) return client.sendText(from, `Maaf, kategori pencarian yang anda pilih tidak ada, mohon cek ${prefix}waifu untuk bantuan`)
+        if (modes.includes(arguments[0]) && categories.includes(arguments[1])) {client.reply(from, ind.wait() + `\n\n_Mendapatkan gambar ${arguments[0]} dengan kategori ${arguments[1]}..._`, id)}
         if (arguments[0] === 'nsfw'){ var i = true } else { var i = false }
-        _function.weeaboo.waifu(i)
+        _function.weeaboo.waifu(arguments[0], arguments[1])
           .then(async ({ url }) => {
+            console.log('Waifu image received!')
             if (i == true) {
               await client.reply(from, `_⚠️Disclaimer⚠️_\n\nPastikan yang melihat ini berumur 18+++++++\nBot Owner tidak bertanggung jawab jika command ini disalahgunakan\n\nTerima kasih`, id)
             }
