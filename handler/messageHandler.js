@@ -1452,18 +1452,20 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
             await client.reply(from, ind.wait(), id)
             _function.facebook(url).then(async (videoMeta) => {
                 const title = videoMeta.title
+	        const linkhd = videoMeta.download.hd
                 var statquality = "quality"
                 var linkdown
 
-                if (videoMeta.download.hd === null) {
+                if (linkhd === null) {
                   linkdown = videoMeta.download.sd
                   statquality = "SD"
                 } else {
                   linkdown = videoMeta.download.hd
                   statquality = "HD"
                 }
-                /*
+                
                 console.log(linkdown);
+               /*
                 const filepath = "./media"
 
                 const dl = new DownloaderHelper(linkdown, filepath);
