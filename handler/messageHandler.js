@@ -774,15 +774,22 @@ module.exports = async (client, message) => {
         const musicmp3 = await _function.youtube.youtubeMusicURL(arguments[0]);
         try {
           //ytwait = true;
-          const mp3url = musicmp3.file;
-          const judul = musicmp3.title;
-          const durasi = musicmp3.duration;
 
-          const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${durasi} detik`
+          if (musicmp3.error == true){
+            await client.reply(from, `⚠️ Error !\nPastikan music yang anda inginkan dibawah 5 menit!\n\nMessage error : \n${musicmp3.message}`, id);
+          } else {
+            const mp3url = musicmp3.file;
+            const judul = musicmp3.title;
+            const durasi = musicmp3.duration;
+            
+            var menitu = Math.floor(durasi / 60);
+            var detiku = durasi - menit * 60;
+            const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${menitu} menit ${detiku} detik`
 
-          await client.reply(from, caption, id)
-          await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
-          //ytwait = false;
+            await client.reply(from, caption, id)
+            await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
+            //ytwait = false;
+          }
         } catch (error) {
           await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
           //console.log("music download error " + musicLink);
