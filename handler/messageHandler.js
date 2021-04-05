@@ -740,18 +740,25 @@ module.exports = async (client, message) => {
         if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
         //if (ytwait == true) return await client.reply(from, '_⚠️ Mohon menunggu command music sebelumnya selesai diupload terlebih dahulu_', id);
         const musicLink = await _function.youtube.youtubeMusic(arguments.join(' '));
-        if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 10 menit!_', id);
+        if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 5 menit!_', id);
         try {
           //ytwait = true;
-          const mp3url = musicLink.file;
-          const judul = musicLink.title;
-          const durasi = musicLink.duration;
 
-          const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${durasi} detik`
+          if (musicLink.error == true){
+            await client.reply(from, `⚠️ Error !\nPastikan music yang anda inginkan dibawah 5 menit!\n\nMessage error : \n${musicLink.message}`, id);
+          } else {
+            const mp3url = musicLink.file;
+            const judul = musicLink.title;
+            const durasi = musicLink.duration;
 
-          await client.reply(from, caption, id)
-          await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
-          //ytwait = false;
+            var menit = Math.floor(durasi / 60);
+            var detik = durasi - menit * 60;
+            const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${menit} menit ${detik} detik`
+
+            await client.reply(from, caption, id)
+            await client.sendFileFromUrl(from, mp3url, "mp3yt.mp3", judul, id, null, null, true);
+            //ytwait = false;
+          }
         } catch (error) {
           await client.reply(from, "Sepertinya musik tidak bisa di upload, mon maap 🙏\n\nSilahkan cari musik lainnya", id);
           //console.log("music download error " + musicLink);
@@ -1452,11 +1459,11 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
             await client.reply(from, ind.wait(), id)
             _function.facebook(url).then(async (videoMeta) => {
                 const title = videoMeta.title
-	        const linkhd = videoMeta.download.hd
+	              const linkhd = videoMeta.download.hd
                 var statquality = "quality"
                 var linkdown
 
-                if (linkhd === null) {
+                if (linkhd == null) {
                   linkdown = videoMeta.download.sd
                   statquality = "SD"
                 } else {
@@ -1464,23 +1471,9 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
                   statquality = "HD"
                 }
                 
-                console.log(linkdown);
-               /*
-                const filepath = "./media"
+                console.log(`FB link found : ${linkdown}`);
 
-                const dl = new DownloaderHelper(linkdown, filepath);
-
-                dl.on('end', downloadInfo => {
-                  console.log('Download Completed: ', downloadInfo)
-                  const dir = path.resolve(__dirname, `../media/${downloadInfo.fileName}`);
-                  console.log(dir)
-                })
-                dl.start().catch(err => { 
-                  console.log(err) 
-                  client.reply(from, `Error, url tidak valid atau tidak memuat video. [Invalid Link or No Video] \n\n${err}`, id);
-                });
-                */
-                const caption = `Judul: ${title} \n\nKualitas Video: \n${statquality} \n\nProcessed for ${_function.processTime(t, moment())} _Second_`
+                const caption = `Judul: ${title} \n\nKualitas Video: ${statquality}`
                 await client.sendFileFromUrl(from, linkdown, 'videos.mp4', caption)
                     .then((serialized) => console.log(`Sukses Mengirim File dengan id: ${serialized} diproses selama ${_function.processTime(t, moment())}`))
                     .catch((err) => console.error(err))
