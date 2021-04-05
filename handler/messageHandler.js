@@ -186,13 +186,13 @@ module.exports = async (client, message) => {
       break
 
       case 'unblock':
-        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id);
         await client.contactUnblock(arguments[0] + 'c.us');
         return await client.reply(from, '_🟢 Berhasil *Unblock* user!_', id);
         break;
 
       case 'leaveall':
-        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id);
         const allGroups = await client.getAllGroups();
         allGroups.forEach(async (group) => {
           if (!group.id !== botGroup) {
@@ -217,15 +217,16 @@ module.exports = async (client, message) => {
         break;
 
       case 'clearall':
-        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id);
         allChats.forEach(async (chat) => {
           await client.clearChat(chat.id);
         });
         return await client.reply(from, '_🟢 Berhasil Membersihkan History Message Bot!_', id);
         break;
 
+
       case 'bc':
-        if (sender.id !== botOwner) return await client.reply(from, '_⛔ Perintah yang kamu maksud hanya dapat digunakan oleh Owner bot!_', id);
+        if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id);
         if (arguments.length < 1) return;
         await allChats.forEach(async (chat) => {
           await client.sendText(chat.id, arguments.join(' '));
@@ -550,7 +551,7 @@ module.exports = async (client, message) => {
 
       case 'pick':
         if (!isGroup) return await client.reply(from, '_⛔ Perintah ini hanya dapat di-gunakan didalam grup!_', id);
-        if (arguments.length < 1) return await client.reply(from, '_Contoh penggunaan perintah : !pick <sifat>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_Contoh penggunaan perintah : ${botPrefix}pick <sifat>_`, id);
         const pickSomeone = groupMetadata.participants[Math.floor(Math.random() * groupMetadata.participants.length)];
         await client.sendTextWithMentions(from, `_👦🏼 ${arguments.join(' ')} di grup ini adalah @${pickSomeone.id.split('@')[0]}_`);
         break;
@@ -738,7 +739,7 @@ module.exports = async (client, message) => {
       case 'musik':
       case 'music':
         await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !music <title>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}music <title>_`, id);
         //if (ytwait == true) return await client.reply(from, '_⚠️ Mohon menunggu command music sebelumnya selesai diupload terlebih dahulu_', id);
         const musicLink = await _function.youtube.youtubeMusic(arguments.join(' '));
         if (!musicLink) return await client.reply(from, '_⚠️ Pastikan music yang anda inginkan dibawah 5 menit!_', id);
@@ -769,7 +770,7 @@ module.exports = async (client, message) => {
 
       case 'musicyt':
         await client.reply(from, "Fitur ini memerlukan resource yang berat, dimohon untuk tidak menspam command ini", id);
-        if (arguments.length < 1) return await client.reply(from, '_⚠️ Contoh Penggunaan Perintah : !musicyt <url>_', id);
+        if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}musicyt <url>_`, id);
         const musicmp3 = await _function.youtube.youtubeMusicURL(arguments[0]);
         try {
           //ytwait = true;
@@ -1602,13 +1603,22 @@ Usage: *${botPrefix}reminder* 10s | pesan_pengingat
 
       case 'waifu':
         const modes = ['sfw', 'nsfw']
-        const categories = ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'kill', 'slap', 'happy', 'wink', 'poke', 'dance', 'cringe', 'blush']
+        const categories = ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'kill', 'slap', 'happy', 'wink', 'poke', 'dance', 'cringe', 'blush', 'trap', 'blowjob']
+        var mode,cat;
+        const random = Math.floor(Math.random() * categories.length);
         if (arguments.length !== 2) return await client.reply(from, ind.waifu(), id)
         if (!modes.includes(arguments[0])) return client.sendText(from, `Maaf, mode pencarian yang anda pilih tidak ada, mohon cek ${prefix}waifu untuk bantuan`)
         if (!categories.includes(arguments[1])) return client.sendText(from, `Maaf, kategori pencarian yang anda pilih tidak ada, mohon cek ${prefix}waifu untuk bantuan`)
         if (modes.includes(arguments[0]) && categories.includes(arguments[1])) {client.reply(from, ind.wait() + `\n\n_Mendapatkan gambar ${arguments[0]} dengan kategori ${arguments[1]}..._`, id)}
         if (arguments[0] === 'nsfw'){ var i = true } else { var i = false }
-        _function.weeaboo.waifu(arguments[0], arguments[1])
+        if (arguments[0] === 'random'){ 
+          mode = "sfw"
+          cat = categories[random]
+        } else {
+          mode = arguments[0]
+          cat = arguments[1]
+        }
+        _function.weeaboo.waifu(mode, cat)
           .then(async ({ url }) => {
             console.log('Waifu image received!')
             if (i == true) {
