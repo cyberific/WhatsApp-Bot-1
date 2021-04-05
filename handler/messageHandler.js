@@ -783,7 +783,7 @@ module.exports = async (client, message) => {
             const durasi = musicmp3.duration;
             
             var menitu = Math.floor(durasi / 60);
-            var detiku = durasi - menit * 60;
+            var detiku = durasi - menitu * 60;
             const caption = `----Detail musik----\n\nJudul : ${judul}\nDurasi : ${menitu} menit ${detiku} detik`
 
             await client.reply(from, caption, id)
