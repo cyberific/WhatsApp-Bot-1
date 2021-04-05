@@ -242,6 +242,7 @@ module.exports = async (client, message) => {
         break;
 
       case 'ban':
+        if (arguments.length !== 1) client.reply(from, `_⚠️ Contoh Penggunaan perintah : ${botPrefix}ban add @mention/nomor_`, id);
           if (sender.id !== botOwner) return await client.reply(from, ind.ownerOnly(), id)
           if (arguments[0] === 'add') {
               if (mentionedJidList.length !== 0) {
@@ -978,7 +979,8 @@ Barra @6281388088047
 Wahyu @6281413543830`
         await client.sendTextWithMentions(from, mc);
         break;
-        
+
+      case 'tambahtugas':
       case 'addtugas':
 	if (!q.includes('|')) return await client.reply(from, ind.wrongFormat(), id);
         if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix}addtugas | <detail tugas>_`, id);
@@ -996,7 +998,8 @@ Wahyu @6281413543830`
           await client.reply(from, listtugas, id);
         }
         break;
-      
+        
+      case 'deletetugas':
       case 'hapustugas':
         if (arguments.length < 1) return await client.reply(from, `_⚠️ Contoh Penggunaan Perintah : ${botPrefix} <nomor tugas>_`, id);
         var i = arguments[0];
